@@ -1,0 +1,29 @@
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.cproject
+/.vscode
+*.swp
+*.placeholder
+*.bak
+
+# Others
+.DS_Store
+
+# Angular CLI
+/.angular
+
+# Firebase
+/.firebase

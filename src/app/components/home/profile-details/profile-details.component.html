@@ -1,0 +1,270 @@
+@if (isVisible()) {
+<div class="profile-overlay fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+  <div class="profile-details bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg">
+      <div class="flex justify-between items-start">
+        <div class="flex items-center space-x-4">
+          <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+            <fa-icon [icon]="faUser" class="text-3xl text-blue-600"></fa-icon>
+          </div>
+          <div>
+            @if (isLoading()) {
+              <div class="flex items-center space-x-2">
+                <fa-icon [icon]="faSpinner" class="animate-spin"></fa-icon>
+                <h2 class="text-2xl font-bold">Loading...</h2>
+              </div>
+            } @else if (error()) {
+              <h2 class="text-2xl font-bold">Error</h2>
+              <p class="text-blue-100">{{ error() }}</p>
+            } @else if (getPersonalInfo()) {
+              <h2 class="text-2xl font-bold">{{ getPersonalInfo()?.name }}</h2>
+              <p class="text-blue-100">Member since {{ formatDate(getPersonalInfo()?.memberSince || '') }}</p>
+            }
+          </div>
+        </div>
+        <div class="flex space-x-2">
+          <button (click)="editProfile()" 
+                  class="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-colors"
+                  title="Edit Profile">
+            <fa-icon [icon]="faEdit" class="text-white"></fa-icon>
+          </button>
+          <button (click)="hide()" 
+                  class="bg-white bg-opacity-20 hover:bg-opacity-30 p-2 rounded-lg transition-colors"
+                  title="Close">
+            <fa-icon [icon]="faTimes" class="text-white"></fa-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6">
+      @if (isLoading()) {
+        <div class="flex justify-center items-center py-12">
+          <div class="text-center">
+            <fa-icon [icon]="faSpinner" class="text-4xl text-blue-500 animate-spin mb-4"></fa-icon>
+            <p class="text-gray-600">Loading profile data...</p>
+          </div>
+        </div>
+      } @else if (error()) {
+        <div class="text-center py-12">
+          <div class="text-red-500 mb-4">
+            <fa-icon [icon]="faTimes" class="text-4xl"></fa-icon>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Error Loading Profile</h3>
+          <p class="text-gray-600 mb-4">{{ error() }}</p>
+          <button (click)="retryLoading()" 
+                  class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+            Retry
+          </button>
+        </div>
+      } @else if (getPersonalInfo()) {
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Left Column - Personal Info -->
+          <div class="lg:col-span-1 space-y-6">
+            <!-- Personal Information -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faUser" class="mr-2 text-blue-500"></fa-icon>
+                Personal Information
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center text-sm">
+                  <fa-icon [icon]="faEnvelope" class="mr-3 text-gray-400 w-4"></fa-icon>
+                  <span class="text-gray-600">{{ getPersonalInfo()?.email }}</span>
+                </div>
+                <div class="flex items-center text-sm">
+                  <fa-icon [icon]="faPhone" class="mr-3 text-gray-400 w-4"></fa-icon>
+                  <span class="text-gray-600">{{ getPersonalInfo()?.phone }}</span>
+                </div>
+                <div class="flex items-start text-sm">
+                  <fa-icon [icon]="faMapMarkerAlt" class="mr-3 text-gray-400 w-4 mt-1"></fa-icon>
+                  <span class="text-gray-600">
+                    {{ getPersonalInfo()?.address }}, {{ getPersonalInfo()?.city }}, {{ getPersonalInfo()?.state }} {{ getPersonalInfo()?.pin }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faCog" class="mr-2 text-purple-500"></fa-icon>
+                Quick Actions
+              </h3>
+              <div class="space-y-2">
+                <button (click)="navigateToAddress()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center">
+                  <fa-icon [icon]="faMapMarkerAlt" class="mr-2 text-green-500"></fa-icon>
+                  <span class="text-sm">Manage Addresses</span>
+                </button>
+                <button (click)="navigateToPayments()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center">
+                  <fa-icon [icon]="faCreditCard" class="mr-2 text-purple-500"></fa-icon>
+                  <span class="text-sm">Payment Methods</span>
+                </button>
+                <button (click)="navigateToSettings()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center">
+                  <fa-icon [icon]="faCog" class="mr-2 text-gray-500"></fa-icon>
+                  <span class="text-sm">Account Settings</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Middle Column - Shopping Activity -->
+          <div class="lg:col-span-1 space-y-6">
+            <!-- Shopping Stats -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faShoppingBag" class="mr-2 text-orange-500"></fa-icon>
+                Shopping Activity
+              </h3>
+              <div class="space-y-4">
+                <div class="flex justify-between items-center p-3 bg-white rounded">
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faShoppingBag" class="mr-2 text-blue-500"></fa-icon>
+                    <span class="text-sm font-medium">Total Orders</span>
+                  </div>
+                  <span class="text-lg font-bold text-blue-600">{{ getShoppingStats()?.totalOrders || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-white rounded">
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faHeart" class="mr-2 text-red-500"></fa-icon>
+                    <span class="text-sm font-medium">Wishlist Items</span>
+                  </div>
+                  <span class="text-lg font-bold text-red-600">{{ getShoppingStats()?.wishlistItems || 0 }}</span>
+                </div>
+                <div class="flex justify-between items-center p-3 bg-white rounded">
+                  <div class="flex items-center">
+                    <fa-icon [icon]="faTag" class="mr-2 text-green-500"></fa-icon>
+                    <span class="text-sm font-medium">Compare Items</span>
+                  </div>
+                  <span class="text-lg font-bold text-green-600">{{ getShoppingStats()?.compareItems || 0 }}</span>
+                </div>
+                @if (getShoppingStats()?.totalSpent) {
+                  <div class="flex justify-between items-center p-3 bg-white rounded">
+                    <div class="flex items-center">
+                      <fa-icon [icon]="faCreditCard" class="mr-2 text-purple-500"></fa-icon>
+                      <span class="text-sm font-medium">Total Spent</span>
+                    </div>
+                    <span class="text-lg font-bold text-purple-600">{{ formatCurrency(getShoppingStats()?.totalSpent || 0) }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faTag" class="mr-2 text-green-500"></fa-icon>
+                Quick Links
+              </h3>
+              <div class="space-y-2">
+                <button (click)="navigateToOrders()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center justify-between">
+                  <span class="text-sm">View Orders</span>
+                  <fa-icon [icon]="faShoppingBag" class="text-gray-400"></fa-icon>
+                </button>
+                <button (click)="navigateToWishlist()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center justify-between">
+                  <span class="text-sm">My Wishlist</span>
+                  <fa-icon [icon]="faHeart" class="text-gray-400"></fa-icon>
+                </button>
+                <button (click)="navigateToCompare()" 
+                        class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors flex items-center justify-between">
+                  <span class="text-sm">Compare Products</span>
+                  <fa-icon [icon]="faTag" class="text-gray-400"></fa-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column - Recent Activity -->
+          <div class="lg:col-span-1 space-y-6">
+            <!-- Account Status -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faUser" class="mr-2 text-indigo-500"></fa-icon>
+                Account Status
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Account Type</span>
+                  <span class="text-sm font-medium text-green-600">{{ getAccountStatus()?.accountType || 'Standard' }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Verification</span>
+                  <span class="text-sm font-medium text-green-600">{{ getAccountStatus()?.verificationStatus || 'Pending' }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-gray-600">Member Level</span>
+                  <span class="text-sm font-medium text-purple-600">{{ getAccountStatus()?.memberLevel || 'Member' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Orders -->
+            @if (getRecentOrders() && getRecentOrders().length > 0) {
+              <div class="bg-gray-50 rounded-lg p-4">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  <fa-icon [icon]="faShoppingBag" class="mr-2 text-orange-500"></fa-icon>
+                  Recent Orders
+                </h3>
+                <div class="space-y-2">
+                  @for (order of getRecentOrders(); track order.id) {
+                    <div class="flex justify-between items-center p-2 bg-white rounded text-sm">
+                      <div>
+                        <div class="font-medium">{{ order.orderId }}</div>
+                        <div class="text-gray-500">{{ formatDate(order.date) }}</div>
+                      </div>
+                      <div class="text-right">
+                        <div class="font-medium">{{ formatCurrency(order.amount) }}</div>
+                        <div class="text-xs px-2 py-1 rounded-full inline-block"
+                             [class.bg-green-100]="order.status === 'completed'"
+                             [class.bg-blue-100]="order.status === 'processing'"
+                             [class.bg-yellow-100]="order.status === 'pending'">
+                          {{ order.status }}
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Support -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <fa-icon [icon]="faCog" class="mr-2 text-teal-500"></fa-icon>
+                Support & Help
+              </h3>
+              <div class="space-y-2">
+                <button class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors text-sm">
+                  Help Center
+                </button>
+                <button class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors text-sm">
+                  Contact Support
+                </button>
+                <button class="w-full text-left px-3 py-2 bg-white rounded hover:bg-gray-100 transition-colors text-sm">
+                  FAQ & Guides
+                </button>
+              </div>
+            </div>
+
+            <!-- Logout -->
+            <div class="bg-red-50 rounded-lg p-4">
+              <button (click)="logout()" 
+                      class="w-full flex items-center justify-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg transition-colors">
+                <fa-icon [icon]="faSignOutAlt"></fa-icon>
+                <span class="font-medium">Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
+}

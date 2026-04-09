@@ -1,0 +1,89 @@
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-seller-register',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  template: `
+    <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-10 border border-gray-100">
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Become an eStore Seller</h2>
+      
+      <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="space-y-6">
+        
+        <!-- Step 1: Store Details -->
+        <div class="border-b pb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">1. Store Details</h3>
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Store Name</label>
+              <input type="text" [(ngModel)]="storeName" name="storeName" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Financial Details -->
+        <div class="border-b pb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">2. Bank / Payout Details</h3>
+          <p class="text-xs text-gray-500 mb-4">Where should we send your earnings?</p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+              <input type="text" [(ngModel)]="bankName" name="bankName" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Account Number</label>
+              <input type="text" [(ngModel)]="accountNumber" name="accountNumber" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Routing Number / Swift Code</label>
+              <input type="text" [(ngModel)]="routingNumber" name="routingNumber" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Commission Agreement -->
+        <div class="pt-4 bg-indigo-50 p-4 rounded-md">
+          <h3 class="text-lg font-semibold text-indigo-800 mb-2">3. Commission Agreement</h3>
+          <p class="text-sm text-indigo-700 mb-4">
+            By registering as a seller, you agree that <strong>eStore will retain a 10% commission fee</strong> on all items sold. The remaining 90% will be paid out to the account specified above.
+          </p>
+          <div class="flex items-center">
+            <input type="checkbox" [(ngModel)]="acceptedTerms" name="acceptedTerms" required
+              class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+            <label class="ml-2 block text-sm text-gray-900">
+              I accept the eStore platform terms & conditions and commission structure.
+            </label>
+          </div>
+        </div>
+
+        <button type="submit" [disabled]="!registerForm.form.valid || !acceptedTerms"
+          class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
+          Register My Store
+        </button>
+      </form>
+    </div>
+  `
+})
+export class SellerRegisterComponent {
+  storeName = '';
+  bankName = '';
+  accountNumber = '';
+  routingNumber = '';
+  acceptedTerms = false;
+
+  constructor(private router: Router) {}
+
+  onSubmit() {
+    // Implement API call to register seller in Firebase/backend
+    alert('Store successfully registered! Welcome to eStore.');
+    this.router.navigate(['/seller/dashboard']);
+  }
+}

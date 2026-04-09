@@ -1,0 +1,96 @@
+.profile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.profile-details {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-in-out;
+  margin: 20px;
+}
+
+/* Hide sidebar when profile is open */
+body.profile-open .category-sidebar {
+  display: none !important;
+}
+
+body.profile-open .main-content-with-sidebar {
+  margin-left: 0 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-details {
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+    width: 95%;
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-details {
+    margin: 0;
+    border-radius: 0;
+    max-height: 100vh;
+    width: 100%;
+  }
+  
+  .grid-cols-1 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Custom scrollbar for profile content */
+.profile-details::-webkit-scrollbar {
+  width: 6px;
+}
+
+.profile-details::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.profile-details::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.profile-details::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
