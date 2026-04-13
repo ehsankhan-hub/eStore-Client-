@@ -44,8 +44,23 @@ export class ProductsComponent {
   ngOnInit(): void {}
 
   getImageUrl(imageName: any | undefined): string {
-    if (!imageName) return `${this.imageBasePath}placeholder.png`;
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) return imageName;
+    if (!imageName || imageName === 'undefined') return `${this.imageBasePath}shop-1.jpg`;
+    
+    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+      return imageName;
+    }
+
+    // Check if it's an uploaded image (not starting with assets/ or shop-)
+    if (!imageName.startsWith('assets/') && !imageName.startsWith('shop-') && !imageName.includes('.')) {
+       // Legacy fallback or weird name
+    }
+
+    // If it looks like a filename from multer (e.g. 123456789.jpg)
+    // or if it doesn't match our local asset pattern
+    if (imageName.includes('-') && imageName.includes('.') && !imageName.startsWith('assets/')) {
+        return `http://localhost:5004/api/uploads/${imageName}`;
+    }
+
     return `${this.imageBasePath}${imageName}`;
   }
 
@@ -70,7 +85,8 @@ export class ProductsComponent {
 
   onImageError(event: Event, product: Product, imageIndex: number) {
     const imgElement = event.target as HTMLImageElement;
-    imgElement.src = 'assets/images/placeholder.png';
+    imgElement.onerror = null; // Prevent infinite loop if fallback fails
+    imgElement.src = 'assets/images/shop-1.jpg'; // Use existing shop image as placeholder
   }
 
   trackByProductId(index: number, product: Product): number {

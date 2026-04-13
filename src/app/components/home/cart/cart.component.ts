@@ -18,6 +18,7 @@ import { LoggedInUser } from '../types/user.type';
 import { UserService } from '../services/user/user.service';
 import { OrderService } from '../services/order/order.service';
 import { OrderStore } from '../services/order/order.store';
+import { ProductsStoreItem } from '../services/product/products.storeItem';
 
 @Component({
   selector: 'app-cart',
@@ -169,6 +170,10 @@ export class CartComponent {
     this.orderStore.createOrder(deliveryAddress, email).subscribe({
       next: (result) => {
         this.cartStore.clearCart();
+        // Slightly delay the refresh to allow DB commit to propagate
+        setTimeout(() => {
+          this.productsStoreItem.loadProducts();
+        }, 500);
         this.alertType = 0;
         this.alertMessage = 'Order registered successfully!';
         // Reset form and disable button

@@ -3,11 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { SellerService } from '../../../../services/seller.service';
+import { CategoriesStoreItem } from '../../../home/services/category/categories.storeItem';
+import { CategoryService } from '../../../home/services/category/category.service';
 
 @Component({
   selector: 'app-add-product',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule],
+  providers: [CategoriesStoreItem, CategoryService],
   template: `
     <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow mt-8">
       <div class="flex justify-between items-center mb-6 border-b pb-4">
@@ -30,10 +33,9 @@ import { SellerService } from '../../../../services/seller.service';
             <select [(ngModel)]="category" name="category" required
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
               <option value="" disabled>Select Category...</option>
-              <option value="Electronics">Electronics</option>
-              <option value="Clothing">Clothing</option>
-              <option value="Home">Home</option>
-              <option value="Beauty">Beauty</option>
+              <option *ngFor="let cat of categoryStore.categories()" [value]="cat.id">
+                {{ cat.category }}
+              </option>
             </select>
           </div>
 
@@ -116,7 +118,11 @@ export class AddProductComponent {
 
   selectedFiles: File[] = [];
 
-  constructor(private router: Router, private sellerService: SellerService) {}
+  constructor(
+    private router: Router, 
+    private sellerService: SellerService,
+    public categoryStore: CategoriesStoreItem
+  ) {}
 
   calculateSplit() {
     if (this.price && this.price > 0) {
@@ -137,7 +143,7 @@ export class AddProductComponent {
   onSubmit() {
     const formData = new FormData();
     formData.append('product_name', this.title);
-    formData.append('category_id', String(this.category === 'Electronics' ? 6 : 8));
+    formData.append('category_id', this.category);
     formData.append('description', this.description || '');
     if (this.price) formData.append('price', String(this.price));
     formData.append('seller_id', '1');
