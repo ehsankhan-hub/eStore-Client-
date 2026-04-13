@@ -32,4 +32,8 @@ export class ProductsService {
   getProduct(id: number): Observable<Product> {
     return this.http.get<Product>(`${this.baseURL}/${id}`);
   }
+
+  getHotDeals(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseURL}/hot-deals`);
+  }
 }

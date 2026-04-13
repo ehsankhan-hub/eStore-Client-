@@ -19,4 +19,7 @@ export interface Product {
   isNewArrival?: boolean; // New arrival badge
   freeShipping?: boolean; // Free shipping indicator
   quickViewAvailable?: boolean; // Quick view functionality
+  offer_price?: number; // Price after discount
+  offer_name?: string; // Name of the active promotion
+  discount_pct?: number; // Real discount percentage from the Offers system
 }

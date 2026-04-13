@@ -76,6 +76,8 @@
         (categoryClicked)="onSelectCategory($event)"
       ></app-catnavigation>
 
+      <app-hot-deals *ngIf="showHotDeals()"></app-hot-deals>
+
       <div class="h-full">
         <router-outlet></router-outlet>
       </div>

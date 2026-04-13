@@ -19,6 +19,7 @@ import { CommonModule } from '@angular/common';
           <a [routerLink]="['/seller', 'dashboard']" routerLinkActive="text-indigo-200" class="hover:text-indigo-200 transition-colors font-medium cursor-pointer">Dashboard</a>
           <a [routerLink]="['/seller', 'products']" routerLinkActive="text-indigo-200" class="hover:text-indigo-200 transition-colors font-medium cursor-pointer">My Products</a>
           <a [routerLink]="['/seller', 'add-product']" routerLinkActive="text-indigo-200" class="hover:text-indigo-200 transition-colors font-medium cursor-pointer">Add New Product</a>
+          <a [routerLink]="['/seller', 'offers']" routerLinkActive="text-indigo-200" class="hover:text-indigo-200 transition-colors font-medium cursor-pointer">Manage Offers</a>
           <div class="h-6 w-px bg-indigo-500 mx-2"></div>
           <a [routerLink]="['/home', 'products']" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-sm border border-indigo-400 cursor-pointer">
             Return to Store

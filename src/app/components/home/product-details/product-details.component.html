@@ -17,12 +17,26 @@
 
     <hr class="my-4" />
 
-    <div class="text-[1.3em] font-medium text-gray-600 mb-4">
-      Price:
-      <span class="text-[1.6em] font-semibold text-black">
-        {{ product()?.price | currency }}
-      </span>
-      <div class="text-sm text-gray-500 mt-1">Inclusive of all taxes.</div>
+    <div class="mb-4">
+      <div *ngIf="product()?.discount_pct" class="inline-block bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-sm mb-2 tracking-wide uppercase">
+        Limited Time Deal
+      </div>
+      
+      <div class="text-[1.3em] font-medium text-gray-600">
+        Price:
+        <span *ngIf="product()?.discount_pct" class="text-[1.6em] font-semibold text-red-600 ml-2">
+          {{ product()?.offer_price | currency }}
+        </span>
+        <span [class.text-gray-400]="product()?.discount_pct" 
+              [class.line-through]="product()?.discount_pct"
+              [class.text-[1.6em]]="!product()?.discount_pct"
+              [class.font-semibold]="!product()?.discount_pct"
+              [class.text-black]="!product()?.discount_pct"
+              class="ml-2">
+          {{ product()?.price | currency }}
+        </span>
+        <div class="text-sm text-gray-500 mt-1">Inclusive of all taxes.</div>
+      </div>
     </div>
 
     <div class="text-[1.5em] font-semibold text-gray-700 mb-6">

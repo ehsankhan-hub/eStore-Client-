@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -63,10 +63,30 @@ import { CategoryService } from '../../../home/services/category/category.servic
                 <span>\${{ commissionFee | number:'1.2-2' }}</span>
               </div>
               <div class="flex justify-between text-lg font-bold text-green-700 mt-2">
-                <span>Your Estimated Earnings</span>
+                <span>Your Earnings</span>
                 <span>\${{ sellerEarnings | number:'1.2-2' }}</span>
               </div>
             </div>
+          </div>
+
+          <!-- Promotional Offer Section -->
+          <div class="bg-red-50 border border-red-100 p-4 rounded-md">
+            <h3 class="text-md font-semibold text-red-800 mb-2 flex items-center">
+              <span class="mr-2">🔥</span> Launch with a Deal? (Optional)
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-red-900">Discount (%)</label>
+                <input type="number" [(ngModel)]="discount_pct" name="discount_pct" min="0" max="99" placeholder="e.g. 20"
+                  class="mt-1 block w-full border border-red-200 rounded-md shadow-sm p-2 bg-white focus:ring-red-500 focus:border-red-500">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-red-900">Offer Expiry</label>
+                <input type="date" [(ngModel)]="expires_at" name="expires_at"
+                  class="mt-1 block w-full border border-red-200 rounded-md shadow-sm p-2 bg-white focus:ring-red-500 focus:border-red-500">
+              </div>
+            </div>
+            <p class="text-[10px] text-red-600 mt-2 font-medium italic">* This will place your product in the "Hot Deals" section.</p>
           </div>
 
           <div>
@@ -104,7 +124,7 @@ import { CategoryService } from '../../../home/services/category/category.servic
         </div>
       </form>
     </div>
-  `
+  `,
 })
 export class AddProductComponent {
   title = '';
@@ -115,6 +135,10 @@ export class AddProductComponent {
   commissionRate = 0.10; // 10% eStore fee
   commissionFee = 0;
   sellerEarnings = 0;
+
+  // New Offer Fields
+  discount_pct: number | null = null;
+  expires_at: string = '';
 
   selectedFiles: File[] = [];
 
@@ -147,6 +171,10 @@ export class AddProductComponent {
     formData.append('description', this.description || '');
     if (this.price) formData.append('price', String(this.price));
     formData.append('seller_id', '1');
+
+    // Include Offer Data if provided
+    if (this.discount_pct) formData.append('discount_pct', String(this.discount_pct));
+    if (this.expires_at) formData.append('expires_at', this.expires_at);
 
     this.selectedFiles.forEach((file) => {
       formData.append('images', file);

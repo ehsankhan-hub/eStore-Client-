@@ -73,7 +73,10 @@ export class CartStoreItem {
   addProduct(product: Product): void {
     const current = this._products();
     const index = current.findIndex((i) => i.product.id === product.id);
-    const productPrice = this.parsePrice(product.price);
+    
+    // Choose offer_price if available, otherwise use regular price
+    const rawPrice = (product as any).offer_price ?? product.price;
+    const productPrice = this.parsePrice(rawPrice);
 
     // Stock Validation
     const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;

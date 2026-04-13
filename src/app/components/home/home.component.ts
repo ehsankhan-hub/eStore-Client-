@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { HeaderComponent } from './header/header.component';
 import { CatnavigationComponent } from './catnavigation/catnavigation.component';
 import { CategoryService } from './services/category/category.service';
@@ -16,6 +16,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faBars, faAngleDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Category } from './types/category';
 import { CommonModule } from '@angular/common';
+import { HotDealsComponent } from './hot-deals/hot-deals.component';
 
 @Component({
   selector: 'app-home',
@@ -24,7 +25,8 @@ import { CommonModule } from '@angular/common';
     CatnavigationComponent, 
     RouterOutlet,
     FontAwesomeModule,
-    CommonModule
+    CommonModule,
+    HotDealsComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
@@ -45,6 +47,7 @@ export class HomeComponent {
   
   isSidenavOpen = false;
   expandedCategories = new Set<number>();
+  showHotDeals = signal(false);
 
   constructor(
     private productsStoreItem: ProductsStoreItem,
@@ -56,9 +59,12 @@ export class HomeComponent {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
-        if ((event as NavigationEnd).url === '/home') {
+        const url = (event as NavigationEnd).url;
+        if (url === '/home') {
           this.router.navigate(['/home/products']);
         }
+        // Only show Hot Deals on the main landing page
+        this.showHotDeals.set(url === '/home/products' || url === '/home');
       });
   }
 

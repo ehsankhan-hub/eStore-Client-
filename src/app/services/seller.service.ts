@@ -17,7 +17,19 @@ export class SellerService {
     return this.http.post(`${API_URL}/product`, productData);
   }
 
-  getProducts(sellerId: number): Observable<any[]> {
+  getProducts(sellerId: number | string): Observable<any[]> {
     return this.http.get<any[]>(`${API_URL}/products/${sellerId}`);
+  }
+
+  getOffers(sellerId: number | string): Observable<any[]> {
+    return this.http.get<any[]>(`${API_URL}/offers/${sellerId}`);
+  }
+
+  createOffer(offerData: any): Observable<any> {
+    return this.http.post(`${API_URL}/offer`, offerData);
+  }
+
+  deleteOffer(offerId: number | string): Observable<any> {
+    return this.http.delete(`${API_URL}/offer/${offerId}`);
   }
 }

@@ -176,4 +176,3 @@ export class ProductsComponent {
     return 'Out of Stock';
   }
 }
-

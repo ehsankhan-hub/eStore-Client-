@@ -15,9 +15,11 @@
     <div class="product-card group">
       <!-- Badges Section -->
       <div class="absolute top-2 left-2 z-10 flex flex-col gap-1">
-        @if (enhancedProduct.discount && enhancedProduct.discount > 0) {
-        <div class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-          -{{ enhancedProduct.discount }}%
+        <!-- Real Offer Badge -->
+        @if (product.discount_pct && product.discount_pct > 0) {
+        <div class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-wider animate-pulse">
+           <fa-icon [icon]="faTag" class="mr-1"></fa-icon> 
+           {{ product.offer_name || 'Limited Deal' }}: -{{ product.discount_pct }}%
         </div>
         }
         @if (enhancedProduct.isBestSeller) {
@@ -162,12 +164,12 @@
           </div>
         </div>
 
-        <!-- Price Section (like first image) -->
+        <!-- Real Price Section -->
         <div class="mb-3">
-          @if (enhancedProduct.discount && enhancedProduct.discount > 0) {
+          @if (product.discount_pct && product.discount_pct > 0) {
           <div class="flex items-center gap-2">
-            <span class="text-lg font-bold text-red-500">
-              ${{ (product.price * (1 - enhancedProduct.discount/100)).toFixed(2) }}
+            <span class="text-lg font-bold text-red-600">
+              ${{ product.offer_price | number:'1.2-2' }}
             </span>
             <span class="text-sm text-gray-400 line-through">
               ${{ product.price }}
