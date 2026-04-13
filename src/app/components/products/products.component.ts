@@ -30,7 +30,7 @@ export class ProductsComponent {
   faTimesCircle = faTimesCircle;
 
   productsSignal = signal<Product[]>([]);
-  private imageBasePath = 'assets/images/'; // Centralize base path
+  private imageBasePath = '/assets/images/'; // Centralize base path
 
   // Mock states for UI features
   wishlistStr = new Set<number>();
@@ -52,7 +52,10 @@ export class ProductsComponent {
   getCurrentImage(product: Product): string {
     const idx = product.currentImageIndex || 0;
     if (product.galleryImages && product.galleryImages[idx]) {
-      return product.galleryImages[idx].src;
+      const img = product.galleryImages[idx];
+      // Backend returns string array, but some components might expect object with .src
+      const imageName = typeof img === 'string' ? img : img.src;
+      return this.getImageUrl(imageName);
     }
     return this.getImageUrl(null);
   }
@@ -75,7 +78,14 @@ export class ProductsComponent {
   }
 
   addToCart(product: Product) {
-    this.cart.addProduct(product);
+    const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
+    const inCart = this.cart.getQuantityInCart(product.id);
+    
+    if (inCart < totalStock) {
+      this.cart.addProduct(product);
+    } else {
+      alert(`Maximum stock reached for ${product.name}. Only ${totalStock} available.`);
+    }
   }
 
   // --- NEW METHODS TO SUPPORT ADVANCED HTML TEMPLATE ---
@@ -134,12 +144,20 @@ export class ProductsComponent {
   }
 
   isInStock(product: Product): boolean {
-    // Mock logic: assume products under $500 are in stock
-    return product.price < 500;
+    const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
+    const inCart = this.cart.getQuantityInCart(product.id);
+    return (totalStock - inCart) > 0;
   }
-
+  
   getStockLevel(product: Product): string {
-    return this.isInStock(product) ? 'In Stock' : 'Out of Stock';
+    const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
+    const inCart = this.cart.getQuantityInCart(product.id);
+    const available = totalStock - inCart;
+    
+    if (totalStock > 0) {
+      return available > 0 ? `${available} in stock` : 'Out of stock';
+    }
+    return 'Out of Stock';
   }
 }
 

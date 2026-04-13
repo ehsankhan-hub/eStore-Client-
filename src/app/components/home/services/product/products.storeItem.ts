@@ -23,8 +23,20 @@ export class ProductsStoreItem {
     keyword?: string;
   }): void {
     this.productsService.getAllProducts(filters).subscribe((products) => {
-      console.log('products',products);
-      this.products.set(products);
+      // Process each product's galleryImages if they arrive as JSON strings from MySQL
+      const processedProducts = products.map(p => {
+        if (p.galleryImages && typeof p.galleryImages === 'string') {
+          try {
+            p.galleryImages = JSON.parse(p.galleryImages);
+          } catch (e) {
+            console.error(`Error parsing galleryImages for product ${p.id}:`, e);
+            p.galleryImages = [];
+          }
+        }
+        return p;
+      });
+      console.log('Processed products', processedProducts);
+      this.products.set(processedProducts);
     });
   }
 }

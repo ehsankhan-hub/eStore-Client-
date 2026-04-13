@@ -21,6 +21,9 @@ yarn-error.log
 
 # Others
 .DS_Store
+__MACOSX
+/artifacts
+/tmp
 
 # Angular CLI
 /.angular

@@ -23,8 +23,16 @@ export class OrderService {
 
   // Helper function to safely format price to 2 decimal places
   private formatPrice(price: any): number {
+    if (typeof price === 'number') return Math.round(price * 100) / 100;
+    if (typeof price === 'string') {
+      // Remove currency symbols and commas, then convert to number
+      const cleanPrice = price.replace(/[^0-9.-]/g, '');
+      const parsed = parseFloat(cleanPrice);
+      const numPrice = isNaN(parsed) ? 0 : parsed;
+      return Math.round(numPrice * 100) / 100;
+    }
     const numPrice = Number(price) || 0;
-    return Math.round(numPrice * 100) / 100; // Round to 2 decimal places
+    return Math.round(numPrice * 100) / 100;
   }
 
   saveOrder(

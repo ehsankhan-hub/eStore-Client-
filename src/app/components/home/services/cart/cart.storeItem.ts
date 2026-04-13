@@ -65,10 +65,24 @@ export class CartStoreItem {
     return 0;
   }
 
+  getQuantityInCart(productId: number): number {
+    const item = this._products().find((i) => i.product.id === productId);
+    return item ? item.quantity : 0;
+  }
+
   addProduct(product: Product): void {
     const current = this._products();
     const index = current.findIndex((i) => i.product.id === product.id);
     const productPrice = this.parsePrice(product.price);
+
+    // Stock Validation
+    const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
+    const currentQty = index === -1 ? 0 : current[index].quantity;
+
+    if (currentQty >= totalStock) {
+      console.warn(`Cannot add more [${product.name}] to cart. Stock limit reached: ${totalStock}`);
+      return; // Stop addition
+    }
 
     if (index === -1) {
       this._products.set([

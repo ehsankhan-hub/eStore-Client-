@@ -58,8 +58,9 @@ export class CartComponent {
     private router: Router,
     private userService: UserService,
     private fb: FormBuilder,
-    private orderService: OrderService, //new
-    private orderStore: OrderStore //new
+    private orderService: OrderService,
+    private orderStore: OrderStore,
+    private productsStoreItem: ProductsStoreItem // Inject ProductsStoreItem
   ) {
     this.orderForm = signal(this.createOrderForm(this.user()));
     this.userService.loggedInUser$.subscribe((u) => this.user.set(u));
