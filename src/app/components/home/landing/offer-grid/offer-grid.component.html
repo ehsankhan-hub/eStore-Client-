@@ -1,0 +1,11 @@
+<div class="offer-grid">
+  <div *ngFor="let offer of offers" class="offer-card" (click)="navigateToOffer(offer)">
+    <h3 class="card-title">{{ offer.title }}</h3>
+    <div class="image-wrapper">
+      <img [src]="offer.image" [alt]="offer.title" class="card-image">
+    </div>
+    <a [routerLink]="offer.link" [queryParams]="offer.params" class="card-link" (click)="$event.stopPropagation()">
+      {{ offer.linkText }}
+    </a>
+  </div>
+</div>

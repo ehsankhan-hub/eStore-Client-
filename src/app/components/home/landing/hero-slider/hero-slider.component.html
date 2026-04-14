@@ -1,0 +1,33 @@
+<div class="hero-slider shadow-inner">
+  <div class="slides-container" [style.transform]="'translateX(-' + currentIndex() * 100 + '%)'">
+    <div *ngFor="let slide of slides" class="slide">
+      <img [src]="slide.image" [alt]="slide.title" class="slide-image">
+      <div class="slide-overlay">
+        <div class="slide-content animate-slide-up">
+          <h1 class="slide-title">{{ slide.title }}</h1>
+          <p class="slide-subtitle">{{ slide.subtitle }}</p>
+          <a [routerLink]="slide.link" [queryParams]="slide.params" class="slide-cta">
+            {{ slide.cta }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Arrows -->
+  <button class="nav-btn prev" (click)="prevSlide()">
+    <fa-icon [icon]="faChevronLeft"></fa-icon>
+  </button>
+  <button class="nav-btn next" (click)="nextSlide()">
+    <fa-icon [icon]="faChevronRight"></fa-icon>
+  </button>
+
+  <!-- Indicators -->
+  <div class="indicators">
+    <div *ngFor="let slide of slides; let i = index" 
+         class="dot" 
+         [class.active]="currentIndex() === i"
+         (click)="setSlide(i)">
+    </div>
+  </div>
+</div>

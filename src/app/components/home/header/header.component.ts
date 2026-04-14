@@ -23,8 +23,10 @@ import {
   faCoins,
   faShieldAlt,
   faQuestionCircle,
+  faBars,
 } from '@fortawesome/free-solid-svg-icons';
 import { CategoriesStoreItem } from '../services/category/categories.storeItem';
+import { Category } from '../types/category';
 import { SearchKeyword } from '../types/searchKeyword.type';
 import {
   ActivatedRoute,
@@ -69,6 +71,7 @@ export class HeaderComponent implements AfterViewInit {
   faCoins = faCoins;
   faShieldAlt = faShieldAlt;
   faQuestionCircle = faQuestionCircle;
+  faBars = faBars;
 
   dropdownVisible = signal(false);
   myAccountSubmenuVisible = signal(false);
@@ -82,6 +85,7 @@ export class HeaderComponent implements AfterViewInit {
   }
 
   readonly searchClicked = output<SearchKeyword>();
+  readonly menuClicked = output<void>();
   displaySearch = signal(true);
 
   isUserAuthenticated = signal(false);
@@ -131,13 +135,20 @@ export class HeaderComponent implements AfterViewInit {
     });
   }
 
-  onClickSearch(keyword: string, categoryId: string): void {
+  onClickSearch(keyword: string, categoryIdInput: string): void {
+    const categoryId = categoryIdInput === '0' ? null : categoryIdInput;
     // Navigate to the products page with the search parameters
     this.router.navigate(['/home/products'], {
       queryParams: {
         keyword: keyword,
-        maincategoryid: categoryId, // Or categoryId, depending on your backend
+        maincategoryid: categoryId,
       },
+    });
+  }
+
+  onCategoryClick(mainCategory: Category) {
+    this.router.navigate(['/home/products'], {
+      queryParams: { maincategoryid: mainCategory.id },
     });
   }
 

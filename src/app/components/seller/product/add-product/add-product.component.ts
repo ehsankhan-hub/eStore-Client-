@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { SellerService } from '../../../../services/seller.service';
+import { ToastService } from '../../../../services/toast.service';
 import { CategoriesStoreItem } from '../../../home/services/category/categories.storeItem';
 import { CategoryService } from '../../../home/services/category/category.service';
 
@@ -33,7 +34,7 @@ import { CategoryService } from '../../../home/services/category/category.servic
             <select [(ngModel)]="category" name="category" required
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
               <option value="" disabled>Select Category...</option>
-              <option *ngFor="let cat of categoryStore.categories()" [value]="cat.id">
+              <option *ngFor="let cat of categoryStore.categories()" [ngValue]="cat.id">
                 {{ cat.category }}
               </option>
             </select>
@@ -142,6 +143,8 @@ export class AddProductComponent {
 
   selectedFiles: File[] = [];
 
+  private toast = inject(ToastService);
+
   constructor(
     private router: Router, 
     private sellerService: SellerService,
@@ -182,12 +185,13 @@ export class AddProductComponent {
 
     this.sellerService.addProduct(formData).subscribe({
       next: (res) => {
-        alert('Product "' + this.title + '" onboarded successfully!');
+        this.toast.success('Product "' + this.title + '" onboarded successfully!');
         this.router.navigate(['/seller/products']);
       },
       error: (err) => {
         console.error('Failed to add product', err);
-        alert('Failed to save product. Check console.');
+        const msg = err.error?.error || 'Failed to save product details. Please try again.';
+        this.toast.error(msg);
       }
     });
   }

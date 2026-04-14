@@ -50,23 +50,6 @@
                    [class.text-gray-400]="!isInWishlist(product.id)"
                    class="transition-colors text-sm"></fa-icon>
         </button>
-        
-        <!-- Quick View Button (eye icon from first image) -->
-        <button class="bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-gray-200"
-                (click)="openQuickView(product)"
-                title="Quick View">
-          <fa-icon [icon]="faEye" class="text-gray-600 hover:text-blue-500 transition-colors text-sm"></fa-icon>
-        </button>
-        
-        <!-- Compare Button (two squares icon from first image) -->
-        <button class="bg-white rounded-full p-2 shadow-lg hover:shadow-xl transition-all hover:scale-110 border border-gray-200"
-                (click)="toggleComparison(product)"
-                title="Add to Compare">
-          <fa-icon [icon]="faTag" 
-                   [class.text-blue-500]="isInComparison(product.id)" 
-                   [class.text-gray-400]="!isInComparison(product.id)"
-                   class="transition-colors text-sm"></fa-icon>
-        </button>
       </div>
       
       <!-- Image container -->

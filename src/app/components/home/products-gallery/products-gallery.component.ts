@@ -8,7 +8,6 @@ import { ActivatedRoute } from '@angular/router';
   imports: [ProductsComponent],
   templateUrl: './products-gallery.component.html',
   styleUrl: './products-gallery.component.css',
-  providers: [ProductsStoreItem],
 })
 export class ProductsGalleryComponent implements OnInit {
   constructor(

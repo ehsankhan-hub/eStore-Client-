@@ -44,24 +44,28 @@ export class ProductsComponent {
   ngOnInit(): void {}
 
   getImageUrl(imageName: any | undefined): string {
-    if (!imageName || imageName === 'undefined') return `${this.imageBasePath}shop-1.jpg`;
+    if (!imageName || imageName === 'undefined' || imageName === 'null') {
+      return `${this.imageBasePath}shop-1.jpg`;
+    }
     
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+    // 1. Absolute URLs (external images)
+    if (imageName.startsWith('http')) {
       return imageName;
     }
 
-    // Check if it's an uploaded image (not starting with assets/ or shop-)
-    if (!imageName.startsWith('assets/') && !imageName.startsWith('shop-') && !imageName.includes('.')) {
-       // Legacy fallback or weird name
+    // 2. Local Assets (starting with assets/ or shop-)
+    if (imageName.startsWith('assets/') || imageName.startsWith('shop-')) {
+      // Ensure paths like assets/images/ are properly formed
+      if (imageName.startsWith('assets/') && !imageName.includes('images/')) {
+         // Fix if needed, but usually shop-* are in assets/images/
+      }
+      return imageName.startsWith('assets/') ? imageName : `${this.imageBasePath}${imageName}`;
     }
 
-    // If it looks like a filename from multer (e.g. 123456789.jpg)
-    // or if it doesn't match our local asset pattern
-    if (imageName.includes('-') && imageName.includes('.') && !imageName.startsWith('assets/')) {
-        return `http://localhost:5004/api/uploads/${imageName}`;
-    }
-
-    return `${this.imageBasePath}${imageName}`;
+    // 3. Backend Uploads (Seller uploaded images)
+    // Most seller uploads are UUIDs or timestamps with dashes and extensions
+    // If it doesn't look like a static asset, it's likely a backend upload
+    return `http://localhost:5004/api/uploads/${imageName}`;
   }
 
   getCurrentImage(product: Product): string {

@@ -1,6 +1,5 @@
 import { Component, signal } from '@angular/core';
 import { HeaderComponent } from './header/header.component';
-import { CatnavigationComponent } from './catnavigation/catnavigation.component';
 import { CategoryService } from './services/category/category.service';
 import { CategoriesStoreItem } from './services/category/categories.storeItem';
 import { ProductsStoreItem } from './services/product/products.storeItem';
@@ -16,17 +15,14 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faBars, faAngleDown, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { Category } from './types/category';
 import { CommonModule } from '@angular/common';
-import { HotDealsComponent } from './hot-deals/hot-deals.component';
 
 @Component({
   selector: 'app-home',
   imports: [
     HeaderComponent, 
-    CatnavigationComponent, 
     RouterOutlet,
     FontAwesomeModule,
     CommonModule,
-    HotDealsComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
@@ -60,11 +56,8 @@ export class HomeComponent {
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
         const url = (event as NavigationEnd).url;
-        if (url === '/home') {
-          this.router.navigate(['/home/products']);
-        }
-        // Only show Hot Deals on the main landing page
-        this.showHotDeals.set(url === '/home/products' || url === '/home');
+        // Only show Hot Deals on the products page (it's already integrated inside LandingComponent)
+        this.showHotDeals.set(url === '/home/products');
       });
   }
 
@@ -96,12 +89,7 @@ export class HomeComponent {
     this.productsStoreItem.loadProducts({ maincategoryid: mainCategoryId });
   }
   
-  onSearchKeyword(searchKeyword: SearchKeyword): void {
-    this.productsStoreItem.loadProducts({
-      maincategoryid: searchKeyword.categoryId,
-      keyword: searchKeyword.keyword,
-    });
-  }
+
 
   toggleSidenav(): void {
     this.isSidenavOpen = !this.isSidenavOpen;

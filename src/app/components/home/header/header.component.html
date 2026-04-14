@@ -1,80 +1,123 @@
-<div
-  class="fixed top-0 left-0 z-50 w-full min-h-[5rem] shadow-[2px_2px_20px_gray] bg-gray-900 flex flex-wrap md:flex-nowrap items-center px-4 gap-y-2"
->
-  <div class="text-white px-3 md:w-[23%] w-full flex items-center">
-    <h1 class="text-3xl font-bold cursor-pointer">
-      <a routerLink="/home/products" class="cursor-pointer">eStore</a>
-    </h1>
+<div class="fixed top-0 left-0 z-50 w-full flex flex-col">
+  <!-- Top Row: Nav Belt -->
+  <div class="bg-amazon-dark nav-belt flex items-center px-4 py-1 gap-2 md:gap-4 scroll-smooth">
+    <!-- Logo -->
+    <div class="flex items-center min-w-[100px] hover:border hover:border-white p-1 rounded cursor-pointer transition-all">
+      <a routerLink="/home/products" class="text-white flex flex-col items-center">
+        <span class="text-2xl font-black tracking-tight leading-none italic">
+          eStore<span class="text-amazon-orange">.sa</span>
+        </span>
+        <div class="w-full h-[3px] bg-amazon-orange rounded-full -mt-1 scale-x-90 translate-y-1"></div>
+      </a>
+    </div>
+
+    <!-- Location -->
+    <div class="hidden lg:flex nav-box">
+      <span class="nav-line-1">Delivering to Riyadh</span>
+      <div class="flex items-center gap-1">
+        <fa-icon [icon]="faMapMarkerAlt" class="text-white text-sm"></fa-icon>
+        <span class="nav-line-2">Update location</span>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="flex-grow flex items-center h-full py-1">
+      @if(displaySearch()){
+      <div class="amazon-search w-full bg-white group">
+        <select
+          #categoryOptions
+          class="search-dropdown bg-gray-100 outline-none hover:bg-gray-200"
+        >
+          <option value="0">All</option>
+          @for (category of categoryStore.topLevelCategories(); track $index) {
+          <option [value]="category.id">{{ category.category }}</option>
+          }
+        </select>
+        <div class="search-input-container">
+          <input
+            #keyword
+            class="w-full h-full border-none outline-none px-3 text-gray-900"
+            placeholder="Search eStore.sa"
+          />
+        </div>
+        <button
+          (click)="onClickSearch(keyword.value, categoryOptions.value)"
+          class="search-btn bg-amazon-orange hover:bg-amazon-orange-hover"
+        >
+          <fa-icon [icon]="faSearch" class="text-gray-900 text-xl"></fa-icon>
+        </button>
+      </div>
+      }
+    </div>
+
+    <!-- Right Actions -->
+    <div class="flex items-center gap-1 md:gap-3 text-white">
+      <!-- Language -->
+      <div class="hidden md:flex nav-box flex-row items-end gap-1">
+        <fa-icon [icon]="faGlobe" class="text-gray-300"></fa-icon>
+        <span class="nav-line-2 uppercase">EN</span>
+        <fa-icon [icon]="faChevronDown" class="text-[8px] text-gray-400 mb-1"></fa-icon>
+      </div>
+
+      <!-- User Account -->
+      <div class="nav-box" (click)="isUserAuthenticated() ? showProfile() : null" [routerLink]="!isUserAuthenticated() ? '/home/login' : null">
+        <span class="nav-line-1">Hello, {{ isUserAuthenticated() ? userName() : 'sign in' }}</span>
+        <div class="flex items-center gap-1">
+          <span class="nav-line-2">Account & Lists</span>
+          <fa-icon [icon]="faChevronDown" class="text-[8px] text-gray-400 mt-1"></fa-icon>
+        </div>
+      </div>
+
+      <!-- Orders -->
+      <div class="hidden sm:flex nav-box" (click)="pastOrders()">
+        <span class="nav-line-1">Returns</span>
+        <span class="nav-line-2">& Orders</span>
+      </div>
+
+      <!-- Cart -->
+      <div class="nav-box flex-row items-end relative px-2" (click)="navigateToCart()">
+        <div class="cart-container">
+           <fa-icon [icon]="faShoppingCart" class="text-3xl text-white"></fa-icon>
+           <span class="cart-count">
+            {{ cart.totalProducts() || 0 }}
+           </span>
+        </div>
+        <span class="nav-line-2 self-end mb-1 hidden md:inline ml-1">Cart</span>
+      </div>
+    </div>
   </div>
 
-  <div class="w-full md:w-[50%] flex items-center justify-center h-[2.5rem]">
-    @if(displaySearch()){
-    <div
-      class="w-full bg-white flex items-center rounded-md overflow-hidden h-full"
-    >
-      <select
-        #categoryOptions
-        class="bg-gray-300 h-full border-none font-semibold px-2 pr-5"
-      >
-        @for (category of categoryStore.topLevelCategories(); track $index) {
-        <option [value]="category.id">{{ category.category }}</option>
-        }
-      </select>
-      <input
-        #keyword
-        class="w-full h-full border-none outline-none px-3"
-        placeholder="Search..."
-      />
-      <button
-        (click)="onClickSearch(keyword.value, categoryOptions.value)"
-        class="w-[10%] min-w-[2.5rem] h-full border-none bg-gray-300 flex justify-center items-center cursor-pointer"
-      >
-        <fa-icon [icon]="faSearch" class="cursor-pointer"></fa-icon>
-      </button>
-    </div>
-    }
-  </div>
+  <!-- Bottom Row: Nav Main -->
+  <div class="bg-amazon-belt nav-main flex items-center px-4 overflow-x-auto whitespace-nowrap scrollbar-hide">
+    <button (click)="menuClicked.emit()" class="nav-link flex items-center gap-1 font-bold h-full">
+      <fa-icon [icon]="faBars"></fa-icon>
+      All
+    </button>
+    
+    <a routerLink="/home/products" class="nav-link cursor-pointer hover:border-white transition-all font-bold">Home</a>
 
-  <div
-    class="w-full md:w-[27%] flex items-center justify-between md:justify-end gap-4 text-white text-lg"
-  >
-    @if (!isUserAuthenticated()) {
-    <div class="flex items-center gap-2">
-      <fa-icon [icon]="faUserCircle" class="text-[1.3em]"></fa-icon>
-      <a
-        routerLink="/home/login"
-        class="px-1 py-1 rounded transition-all duration-300 hover:bg-white hover:text-gray-900"
-        >Sign in / Join</a
-      >
-    </div>
-    } @if (isUserAuthenticated()) {
-    <div class="relative inline-block text-left">
-      <button
-        (click)="showProfile()"
-        class="inline-flex items-center gap-2 px-4 py-2 bg-gray-700 text-white font-medium rounded-md hover:bg-gray-800 transition text-base cursor-pointer"
-      >
-        <fa-icon [icon]="faUserCircle" class="text-[1.3rem]"></fa-icon>
-        Hi {{ userName() }}
-      </button>
-    </div>
+    @if (categoryStore.displayOptions()) {
+      @for (category of categoryStore.topLevelCategories(); track $index) {
+          <a (click)="onCategoryClick(category)" class="nav-link cursor-pointer hover:border-white transition-all">
+            {{ category.category }}
+          </a>
+      }
     }
 
-    <div class="relative flex items-center">
-      <button
-        type="button"
-        class="flex items-center justify-center text-white p-2 rounded-full bg-gray-700 hover:bg-gray-800 transition-colors cursor-pointer"
-        (click)="navigateToCart()"
-      >
-        <fa-icon [icon]="faShoppingCart" class="text-[1.3em]"></fa-icon>
-      </button>
+    <a class="nav-link font-bold text-amazon-orange">Today's Deals</a>
+    <a class="nav-link">Customer Service</a>
+    <a class="nav-link">Registry</a>
+    <a class="nav-link">Gift Cards</a>
+    <a class="nav-link">Sell</a>
 
-      @if (cart.cart()) { @if (cart.totalProducts() > 0) {
-      <span
-        class="absolute -top-1 -right-2 flex items-center justify-center text-[0.7rem] font-semibold text-white bg-amber-500 rounded-full w-5 h-5"
-      >
-        {{ cart.totalProducts() }}
-      </span>
-      } }
+    <div class="flex-grow"></div>
+    
+    <a routerLink="/seller" class="nav-link font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Seller Portal</a>
+
+    <div class="hidden xl:flex items-center text-white font-bold text-sm tracking-tight px-4 gap-2">
+       <span>Explore products with</span>
+       <span class="text-lg italic px-1 font-black">eStore</span>
+       <fa-icon [icon]="faHeadset" class="text-amazon-orange"></fa-icon>
     </div>
   </div>
 </div>

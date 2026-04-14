@@ -32,4 +32,12 @@ export class SellerService {
   deleteOffer(offerId: number | string): Observable<any> {
     return this.http.delete(`${API_URL}/offer/${offerId}`);
   }
+
+  deleteProduct(productId: number | string): Observable<any> {
+    return this.http.delete(`${API_URL}/product/${productId}`);
+  }
+
+  updateProduct(productId: number | string, productData: any): Observable<any> {
+    return this.http.put(`${API_URL}/product/${productId}`, productData);
+  }
 }

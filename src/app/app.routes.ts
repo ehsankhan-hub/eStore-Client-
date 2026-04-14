@@ -15,6 +15,11 @@ export const routes: Routes = [
       import('./components/home/home.component').then((c) => c.HomeComponent),
     children: [
       {
+        path: '',
+        loadComponent: () =>
+          import('./components/home/landing/landing.component').then((c) => c.LandingComponent),
+      },
+      {
         path: 'products',
         component: ProductsGalleryComponent,
       },
@@ -45,6 +50,6 @@ export const routes: Routes = [
     path: 'seller',
     loadChildren: () => import('./components/seller/seller.routes').then(m => m.sellerRoutes)
   },
-  { path: '', redirectTo: '/home/products', pathMatch: 'full' },
+  { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: '**', component: NotFoundComponent },
 ];
