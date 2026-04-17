@@ -58,7 +58,7 @@ export class ProductDetailsComponent {
       return imageName;
     }
     if (imageName.startsWith('uploads/')) {
-      return `http://localhost:5004/${imageName}`; // Dynamically proxy backend static uploads
+      return window.location.hostname === 'localhost' ? `http://localhost:5004/${imageName}` : `https://short-coats-dig.loca.lt/${imageName}`;
     }
     
     return `${this.imageBasePath}${imageName}`;

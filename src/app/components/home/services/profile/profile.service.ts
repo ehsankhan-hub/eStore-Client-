@@ -57,7 +57,7 @@ export interface ProfileResponse {
 export class ProfileService {
   private readonly apiUrl = window.location.hostname === 'localhost'
     ? 'http://localhost:5004/api/users'
-    : 'http://192.168.1.21:5004/api/users';
+    : 'https://short-coats-dig.loca.lt/api/users';
   
   // Signals for reactive state management
   profileData = signal<ProfileData | null>(null);

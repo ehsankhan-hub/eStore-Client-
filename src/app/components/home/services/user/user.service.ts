@@ -31,14 +31,14 @@ export class UserService {
   createUser(user: User): Observable<any> {
     const baseURL = window.location.hostname === 'localhost'
       ? 'http://localhost:5004/api/users/signup'
-      : 'http://192.168.1.21:5004/api/users/signup';
+      : 'https://short-coats-dig.loca.lt/api/users/signup';
     return this.http.post(baseURL, user);
   }
 
   login(email: string, password: string): Observable<any> {
     const baseURL = window.location.hostname === 'localhost'
       ? 'http://localhost:5004/api/users/login'
-      : 'http://192.168.1.21:5004/api/users/login';
+      : 'https://short-coats-dig.loca.lt/api/users/login';
     return this.http.post(baseURL, { email: email, password: password });
   }
 

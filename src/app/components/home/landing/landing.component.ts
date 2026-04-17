@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { HeroSliderComponent } from './hero-slider/hero-slider.component';
 import { OfferGridComponent } from './offer-grid/offer-grid.component';
+import { QuadOfferGridComponent } from './quad-offer-grid/quad-offer-grid.component';
 import { HotDealsComponent } from '../hot-deals/hot-deals.component';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, HeroSliderComponent, OfferGridComponent, HotDealsComponent],
+  imports: [CommonModule, HeroSliderComponent, OfferGridComponent, QuadOfferGridComponent, HotDealsComponent],
   template: `
     <div class="landing-container">
       <!-- Hero Slider Section -->
@@ -16,6 +17,7 @@ import { CommonModule } from '@angular/common';
       <!-- Primary Offers Grid (Overlapping Hero) -->
       <div class="max-w-[1500px] mx-auto px-6 -mt-36 relative z-10 pb-8">
         <app-offer-grid></app-offer-grid>
+        <app-quad-offer-grid></app-quad-offer-grid>
       </div>
 
       <!-- Secondary Content Area -->

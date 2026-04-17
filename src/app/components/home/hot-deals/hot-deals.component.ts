@@ -93,7 +93,7 @@ export class HotDealsComponent implements OnInit {
     
     // Check if it's a backend upload
     if (imageName.includes('-') && imageName.includes('.')) {
-        return `http://localhost:5004/api/uploads/${imageName}`;
+        return window.location.hostname === 'localhost' ? `http://localhost:5004/api/uploads/${imageName}` : `https://short-coats-dig.loca.lt/api/uploads/${imageName}`;
     }
     
     return `/assets/images/${imageName}`;

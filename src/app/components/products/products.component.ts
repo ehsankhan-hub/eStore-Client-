@@ -65,7 +65,7 @@ export class ProductsComponent {
     // 3. Backend Uploads (Seller uploaded images)
     // Most seller uploads are UUIDs or timestamps with dashes and extensions
     // If it doesn't look like a static asset, it's likely a backend upload
-    return `http://localhost:5004/api/uploads/${imageName}`;
+    return window.location.hostname === 'localhost' ? `http://localhost:5004/api/uploads/${imageName}` : `https://short-coats-dig.loca.lt/api/uploads/${imageName}`;
   }
 
   getCurrentImage(product: Product): string {

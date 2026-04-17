@@ -10,7 +10,7 @@ export class CategoryService {
   getAllCategories(): Observable<Category[]> {
     const baseURL = window.location.hostname === 'localhost'
       ? 'http://localhost:5004/api/productCategories'
-      : 'http://192.168.1.21:5004/api/productCategories';
+      : 'https://short-coats-dig.loca.lt/api/productCategories';
     return this.http.get<Category[]>(baseURL);
   }
 }

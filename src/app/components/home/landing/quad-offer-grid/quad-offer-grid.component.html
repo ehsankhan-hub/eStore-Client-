@@ -1,0 +1,18 @@
+<div class="quad-offer-grid">
+  <div *ngFor="let offer of quadOffers" class="quad-card" (click)="navigateToOffer(offer)">
+    <h3 class="card-title">{{ offer.title }}</h3>
+    
+    <div class="quad-items-container">
+      <div *ngFor="let item of offer.items" class="quad-item">
+        <div class="item-image-wrapper">
+          <img [src]="item.image" [alt]="item.name" class="item-image">
+        </div>
+        <span class="item-name">{{ item.name }}</span>
+      </div>
+    </div>
+
+    <a [routerLink]="offer.link" [queryParams]="offer.params" class="card-link" (click)="$event.stopPropagation()">
+      {{ offer.linkText }}
+    </a>
+  </div>
+</div>

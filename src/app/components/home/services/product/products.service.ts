@@ -7,7 +7,7 @@ import { filter, Observable } from 'rxjs';
 export class ProductsService {
   private readonly baseURL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5004/api/products'
-    : 'http://192.168.1.21:5004/api/products';
+    : 'https://short-coats-dig.loca.lt/api/products';
   constructor(private http: HttpClient) {}
 
   getAllProducts(filters?: {
