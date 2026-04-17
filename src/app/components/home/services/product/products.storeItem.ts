@@ -2,7 +2,9 @@ import { Injectable, WritableSignal, signal } from '@angular/core';
 import { Product } from '../../types/products.type';
 import { ProductsService } from './products.service';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ProductsStoreItem {
   // private readonly _products = signal<Product[]>([]);
   // readonly products = this._products.asReadonly();

@@ -3,7 +3,9 @@ import { Product } from '../../types/products.type';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { filter, Observable } from 'rxjs';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class ProductsService {
   private readonly baseURL = window.location.hostname === 'localhost' 
     ? 'http://localhost:5004/api/products'

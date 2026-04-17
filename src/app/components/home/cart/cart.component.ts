@@ -1,31 +1,25 @@
 import { Component, effect, signal, WritableSignal } from '@angular/core';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { CartItem } from '../types/cart.type';
-import { Router } from '@angular/router';
-import { CartStoreItem } from '../services/cart/cart.storeItem';
-import { faBoxOpen } from '@fortawesome/free-solid-svg-icons';
-import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+import { faBoxOpen, faShoppingCart, faTrash, faTruckFast, faShieldHeart, faAward, faClockRotateLeft, faMoneyBillWave, faCreditCard, faCheck, faPlus, faCircle, faCircleCheck, faGift, faChevronRight, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule, NgClass } from '@angular/common';
-import { RatingsComponent } from '../../ratings/ratings.component';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { LoggedInUser } from '../types/user.type';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CartStoreItem } from '../services/cart/cart.storeItem';
 import { UserService } from '../services/user/user.service';
 import { OrderService } from '../services/order/order.service';
 import { OrderStore } from '../services/order/order.store';
 import { ProductsStoreItem } from '../services/product/products.storeItem';
+import { RatingsComponent } from '../../ratings/ratings.component';
+import { CartItem } from '../types/cart.type';
+import { LoggedInUser } from '../types/user.type';
+import { PaymentService } from '../services/payment/payment.service';
+import { StripeCardElement, StripeElements } from '@stripe/stripe-js';
 
 @Component({
   selector: 'app-cart',
   imports: [
     FontAwesomeModule,
     CommonModule,
-    RatingsComponent,
     ReactiveFormsModule,
     NgClass,
   ],
@@ -36,11 +30,48 @@ export class CartComponent {
   faTrash = faTrash;
   faBoxOpen = faBoxOpen;
   faShoppingCart = faShoppingCart;
+  faTruckFast = faTruckFast;
+  faShieldHeart = faShieldHeart;
+  faAward = faAward;
+  faClockRotateLeft = faClockRotateLeft;
+  faMoneyBillWave = faMoneyBillWave;
+  faCreditCard = faCreditCard;
+  faCheck = faCheck;
+  faPlus = faPlus;
+  faCircle = faCircle;
+  faCircleCheck = faCircleCheck;
+  faGift = faGift;
+  faChevronRight = faChevronRight;
+  faSpinner = faSpinner;
+  
   private imageBasePath = '/assets/images/'; // Centralize base path
 
   alertType: number = 0; //new
   alertMessage: string = '';
   disableCheckout: boolean = false;
+  
+  // Multi-step Checkout State
+  activeStep = signal<number>(1); // 1: Cart, 2: Delivery, 3: Payment, 4: Success
+  
+  // Mock Data for "Real-world" feel
+  savedAddresses = signal<any[]>([
+    { id: 1, name: 'Ehsan Khan', address: '123 Business Bay', city: 'Riyadh', state: 'Riyadh Province', pin: '12211', isDefault: true },
+    { id: 2, name: 'Ehsan Ahmad Khan', address: '456 Tech Park, Office 202', city: 'Jeddah', state: 'Makkah Region', pin: '21577', isDefault: false }
+  ]);
+
+  savedCards = signal<any[]>([
+    { id: 1, type: 'Mastercard', last4: '3561', name: 'Ehsan Ahmad khan', expiry: '02/2030', expired: false, brandImg: 'assets/images/mastercard.png' },
+    { id: 2, type: 'Visa', last4: '7595', name: 'Ehsan ahmad khan', expiry: '11/2023', expired: true, brandImg: 'assets/images/visa.png' }
+  ]);
+
+  selectedAddressId = signal<number>(1);
+  selectedCardId = signal<number>(1);
+  showAddCardForm = signal<boolean>(false);
+  cardProcessing = signal<boolean>(false);
+
+  // Stripe Elements
+  private elements: StripeElements | undefined;
+  private card: StripeCardElement | undefined;
 
   user = signal<LoggedInUser>({
     firstName: '',
@@ -53,38 +84,183 @@ export class CartComponent {
   });
 
   orderForm: WritableSignal<FormGroup>;
+  addCardForm: FormGroup;
 
   constructor(
     public cartStore: CartStoreItem,
     private router: Router,
-    private userService: UserService,
+    public userService: UserService,
     private fb: FormBuilder,
     private orderService: OrderService,
     private orderStore: OrderStore,
-    private productsStoreItem: ProductsStoreItem // Inject ProductsStoreItem
+    private productsStoreItem: ProductsStoreItem,
+    private paymentService: PaymentService
   ) {
-    this.orderForm = signal(this.createOrderForm(this.user()));
-    this.userService.loggedInUser$.subscribe((u) => this.user.set(u));
+    this.orderForm = signal(this.createOrderForm(this.savedAddresses()[0]));
+    
+    this.addCardForm = this.fb.group({
+      cardName: ['', Validators.required],
+      cardNumber: ['', [Validators.required, Validators.pattern('^[0-9]{16}$')]],
+      expiry: ['', [Validators.required, Validators.pattern('^(0[1-9]|1[0-2])\\/([0-9]{2})$')]],
+      cvv: ['', [Validators.required, Validators.pattern('^[0-9]{3,4}$')]]
+    });
+
+    this.userService.loggedInUser$.subscribe((u) => {
+       if (u && u.email) this.user.set(u);
+    });
 
     effect(() => {
-      const newUser = this.user();
-      this.orderForm.set(this.createOrderForm(newUser));
+      // Sync form when address changes
+      const currentAddress = this.savedAddresses().find((a: any) => a.id === this.selectedAddressId());
+      if (currentAddress) {
+        this.orderForm.set(this.createOrderForm(currentAddress));
+      }
+    });
+
+    effect(async () => {
+      // Initialize Stripe when entering Payment step
+      if (this.activeStep() === 3) {
+        // Wait for next tick to ensure #card-element is in DOM
+        setTimeout(async () => {
+          const stripe = await this.paymentService.getStripe();
+          if (stripe && !this.card) {
+            this.elements = stripe.elements();
+            this.card = this.elements.create('card', {
+              style: {
+                base: {
+                  fontSize: '16px',
+                  color: '#1e293b',
+                  fontFamily: '"Outfit", sans-serif',
+                  '::placeholder': { color: '#94a3b8' }
+                }
+              }
+            });
+            this.card.mount('#card-element');
+          }
+        }, 100);
+      }
     });
   }
 
+  addNewCard() {
+    if (this.addCardForm.valid) {
+      const newCard = {
+        id: this.savedCards().length + 1,
+        type: this.addCardForm.value.cardNumber.startsWith('4') ? 'Visa' : 'Mastercard',
+        last4: this.addCardForm.value.cardNumber.slice(-4),
+        name: this.addCardForm.value.cardName,
+        expiry: this.addCardForm.value.expiry,
+        expired: false,
+        brandImg: this.addCardForm.value.cardNumber.startsWith('4') ? 'assets/images/visa.png' : 'assets/images/mastercard.png'
+      };
+      
+      this.savedCards.update(cards => [...cards, newCard]);
+      this.selectedCardId.set(newCard.id);
+      this.showAddCardForm.set(false);
+      this.addCardForm.reset();
+    }
+  }
+
+  devAutoLogin() {
+    console.log('Attempting Dev Auto-Login...');
+    const testEmail = 'ehsan@example.com';
+    const testPass = '123456';
+    
+    this.userService.login(testEmail, testPass).subscribe({
+      next: (res) => {
+        console.log('Login successful!', res);
+        this.userService.activateToken(res);
+        this.alertType = 1;
+        this.alertMessage = 'Dev Login Successful! You can now place your order.';
+      },
+      error: () => {
+        console.log('Login failed, attempting signup...');
+        const newUser = {
+          firstName: 'Ehsan',
+          lastName: 'Khan',
+          email: testEmail,
+          password: testPass,
+          address: '123 Business Bay',
+          city: 'Riyadh',
+          state: 'Central',
+          pin: '12211',
+          phone: '0501234567'
+        } as any;
+        
+        this.userService.createUser(newUser).subscribe({
+          next: () => {
+            console.log('Signup successful, retrying login...');
+            this.devAutoLogin();
+          },
+          error: (err) => {
+            console.error('Auto-login failed completely:', err);
+            this.alertType = 2;
+            this.alertMessage = 'Dev Login failed. Please create an account manually.';
+          }
+        });
+      }
+    });
+  }
+
+  toggleAddCard() {
+    this.showAddCardForm.update(v => !v);
+  }
+
+  nextStep() {
+    this.disableCheckout = false;
+    if (this.activeStep() < 4) {
+      this.activeStep.update(s => s + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  prevStep() {
+    this.disableCheckout = false;
+    if (this.activeStep() > 1) {
+      this.activeStep.update(s => s - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  selectAddress(id: number) {
+    this.selectedAddressId.set(id);
+  }
+
+  selectCard(id: number) {
+    this.selectedCardId.set(id);
+  }
+
+  getProgressWidth(): string {
+    const step = this.activeStep();
+    if (step === 1) return '0%';
+    if (step === 2) return '33.33%';
+    if (step === 3) return '66.66%';
+    return '80%'; // For step 4 it stays at the end of circles
+  }
+
   getImageUrl(imageName: string | undefined): string {
-    if (!imageName || imageName === 'undefined' || imageName === undefined || imageName.trim() === '') {
-      return `${this.imageBasePath}shop-1.jpg`; // Use existing image as placeholder
+    const placeholder = 'assets/images/shop-1.jpg';
+    
+    if (!imageName || imageName === 'undefined' || imageName === 'null' || imageName.trim() === '') {
+      return placeholder;
     }
     
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
+    // 1. Full URLs
+    if (imageName.startsWith('http')) {
       return imageName;
     }
-    if (imageName.startsWith('uploads/')) {
-      return window.location.hostname === 'localhost' ? `http://localhost:5004/${imageName}` : `https://short-coats-dig.loca.lt/${imageName}`;
+
+    // 2. Local Assets
+    if (imageName.startsWith('assets/') || imageName.startsWith('shop-')) {
+      return imageName.startsWith('assets/') ? imageName : `assets/images/${imageName}`;
     }
+
+    // 3. Backend Uploads
+    const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:5004/api/' : 'https://short-coats-dig.loca.lt/api/';
     
-    return `${this.imageBasePath}${imageName}`;
+    // Remove uploads/ prefix if it already exists to avoid duplication with the apiHost
+    const cleanName = imageName.replace(/^uploads\//, '');
+    return `${apiHost}uploads/${cleanName}`;
   }
 
   // Get the first image from galleryImages or fallback to product_img
@@ -100,23 +276,19 @@ export class CartComponent {
   onImageError(event: Event) {
     const imgElement = event.target as HTMLImageElement;
     imgElement.onerror = null;
-    const placeholder = '/assets/images/shop-1.jpg';
+    const placeholder = 'assets/images/shop-1.jpg';
     console.warn('Cart image not found, replaced with placeholder');
     imgElement.src = placeholder;
   }
 
-  private createOrderForm(user: LoggedInUser | null): FormGroup {
+  private createOrderForm(data: any): FormGroup {
+    const name = data?.name || (data?.firstName && data?.lastName ? `${data.firstName} ${data.lastName}`.trim() : '');
     return this.fb.group({
-      name: [
-        user?.firstName && user?.lastName
-          ? `${user.firstName} ${user.lastName}`.trim()
-          : '',
-        Validators.required,
-      ],
-      address: [user?.address || '', Validators.required],
-      city: [user?.city || '', Validators.required],
-      state: [user?.state || '', Validators.required],
-      pin: [user?.pin || '', Validators.required],
+      name: [name, Validators.required],
+      address: [data?.address || '', Validators.required],
+      city: [data?.city || '', Validators.required],
+      state: [data?.state || '', Validators.required],
+      pin: [data?.pin || '', Validators.required],
     });
   }
 
@@ -137,58 +309,78 @@ export class CartComponent {
   }
 
   onSubmit(): void {
-    if (!this.userService.isAuthenticated()) {
+    if (!this.userService.isAuthenticated() && !this.user()?.email) {
       this.alertType = 2;
-      this.alertMessage = 'Please log in to register your order.';
+      this.alertMessage = 'Please log in to place an order.';
       return;
     }
 
     const form = this.orderForm();
-
     if (form.invalid) {
       this.alertType = 2;
-      this.alertMessage = 'Please fill out all required fields correctly.';
+      this.alertMessage = 'Please fill out all shipping details.';
+      form.markAllAsTouched();
       return;
     }
 
-    const deliveryAddress = {
-      userName: form.get('name')?.value,
-      address: form.get('address')?.value,
-      city: form.get('city')?.value,
-      state: form.get('state')?.value,
-      pin: form.get('pin')?.value,
-    };
-
-    const email = this.user()?.email;
-
-    if (!email) {
+    if (!this.card) {
       this.alertType = 2;
-      this.alertMessage = 'User email not found. Please log in again.';
+      this.alertMessage = 'Payment module not initialized. Please try again.';
       return;
     }
 
-    this.orderStore.createOrder(deliveryAddress, email).subscribe({
-      next: (result) => {
-        this.cartStore.clearCart();
-        // Slightly delay the refresh to allow DB commit to propagate
-        setTimeout(() => {
-          this.productsStoreItem.loadProducts();
-        }, 500);
-        this.alertType = 0;
-        this.alertMessage = 'Order registered successfully!';
-        // Reset form and disable button
-        this.orderForm.set(this.createOrderForm(this.user()));
-        this.disableCheckout = true;
+    this.cardProcessing.set(true);
+    this.disableCheckout = true;
+
+    const amount = this.cartStore.cart().grandTotal;
+    
+    // 1. Create Payment Intent
+    this.paymentService.createPaymentIntent(amount).subscribe({
+      next: (clientSecret) => {
+        // 2. Confirm Payment with Stripe
+        this.paymentService.confirmCardPayment(clientSecret, this.card!).subscribe({
+          next: (paymentIntent) => {
+            console.log('Payment Successful!', paymentIntent);
+            
+            // 3. Create actual order in DB
+            const deliveryAddress = {
+              userName: form.get('name')?.value,
+              address: form.get('address')?.value,
+              city: form.get('city')?.value,
+              state: form.get('state')?.value,
+              pin: form.get('pin')?.value,
+            };
+
+            const email = this.user()?.email;
+            this.orderStore.createOrder(deliveryAddress, email).subscribe({
+              next: () => {
+                this.cartStore.clearCart();
+                this.cardProcessing.set(false);
+                this.nextStep();
+                setTimeout(() => this.productsStoreItem.loadProducts(), 500);
+              },
+              error: (err) => {
+                this.cardProcessing.set(false);
+                this.disableCheckout = false;
+                this.alertType = 2;
+                this.alertMessage = 'Order created but DB sync failed. Contact support.';
+              }
+            });
+          },
+          error: (stripeErr) => {
+            this.cardProcessing.set(false);
+            this.disableCheckout = false;
+            this.alertType = 2;
+            this.alertMessage = stripeErr.message || 'Payment failed. Please check your card.';
+          }
+        });
       },
-      error: (error) => {
+      error: (intentErr) => {
+        this.cardProcessing.set(false);
+        this.disableCheckout = false;
         this.alertType = 2;
-        if (error.error?.message === 'Authorization failed!') {
-          this.alertMessage = 'Please log in to register your order.';
-        } else {
-          this.alertMessage =
-            error.error?.message || 'An unexpected error occurred.';
-        }
-      },
+        this.alertMessage = 'Could not contact payment server.';
+      }
     });
   }
 }

@@ -12,6 +12,7 @@ export interface Order {
   state: string;
   pin: string;
   total: number;
+  shippingCost?: number;
   userEmail: string;
   orderDetails: OrderItem[];
 }
@@ -24,6 +25,8 @@ export interface PastOrder {
   state: string;
   pin: string;
   total: number;
+  shippingCost?: number;
+  orderStatus: string;
   orderDate: string;
 }
 

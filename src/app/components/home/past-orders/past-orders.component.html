@@ -1,85 +1,151 @@
-<div class="max-w-6xl mx-auto bg-white p-8 h-[85vh] overflow-y-auto">
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Left Column: Order Select + Products -->
-    <div class="lg:col-span-2 space-y-6 min-h-[600px]">
-      <!-- Select Order -->
-      <div>
-        <label class="block text-lg font-semibold mb-2 text-gray-800"
-          >Select Order</label
-        >
-        <select
-          (change)="selectOrder($event)"
-          class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="0" disabled selected>Please select value</option>
-          @for (pastOrder of pastOrders(); track $index) {
-          <option value="{{ pastOrder.orderId }}">
-            {{ pastOrder.orderId }} Date: {{ pastOrder.orderDate }}
-          </option>
-          }
-        </select>
-      </div>
+<div class="past-orders-container">
+  <!-- Page Header -->
+  <header class="page-header">
+    <h1 class="page-title">
+      <fa-icon [icon]="faReceipt" class="title-icon"></fa-icon>
+      Order Dashboard
+    </h1>
+    <p class="text-slate-500 mt-2">Browse and search your order history</p>
+  </header>
 
-      @if (pastOrder()) {
-      <!-- Product List -->
-      <div class="space-y-6">
-        <h2 class="text-xl font-semibold text-gray-900">
-          Previous Order Details
-        </h2>
-        @for (product of pastOrderProducts(); track product) {
-        <div
-          class="flex flex-col sm:flex-row gap-4 items-start bg-gray-50 p-4 rounded-lg"
-        >
-          <img
-            [src]="'../../../../assets/images/' + product.productImage"
-            alt="Product Image"
-            class="w-full sm:w-32 h-32 object-cover rounded-md"
-          />
-          <div class="flex-1 space-y-1">
-            <h3 class="text-lg font-medium text-gray-800">
-              {{ product.productName }}
-            </h3>
-            <div class="text-sm text-gray-600">
-              <span class="mr-2">Price:</span>
-              <span class="font-semibold text-gray-900">{{
-                product.price | currency
-              }}</span>
+  <!-- Search & Filter Bar -->
+  <section class="search-filter-box">
+    <div class="search-wrapper">
+      <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search by Order ID, City, or Name..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="searchTerm.set($event)"
+      >
+      <div *ngIf="searchTerm()" class="clear-btn" (click)="clearSearch()">
+        <fa-icon [icon]="faTimesCircle"></fa-icon>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-6xl mx-auto">
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="text-center py-20">
+      <fa-icon [icon]="faClock" class="text-5xl text-indigo-500 mb-4 animate-spin inline-block"></fa-icon>
+      <p class="text-xl font-medium text-slate-600">Loading order details...</p>
+    </div>
+
+    <!-- Empty Search Results -->
+    <div *ngIf="!loading() && hasOrders() && filteredOrders().length === 0" class="no-results">
+       <fa-icon [icon]="faSearch" class="text-4xl text-slate-300 mb-3"></fa-icon>
+       <h3 class="text-lg font-bold text-slate-700">No orders match your search</h3>
+       <p class="text-slate-500">Try a different keyword or clear the search.</p>
+    </div>
+
+    <!-- Empty History -->
+    <div *ngIf="!loading() && !hasOrders()" class="no-results">
+       <fa-icon [icon]="faBox" class="text-5xl text-slate-200 mb-4"></fa-icon>
+       <h2 class="text-xl font-bold text-slate-700">Your order history is empty</h2>
+       <button class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg" routerLink="/home/products">Start Shopping</button>
+    </div>
+
+    <!-- Orders Grid -->
+    <div *ngIf="!loading() && filteredOrders().length > 0" class="orders-grid">
+      @for (order of filteredOrders(); track order.orderId) {
+        <div class="order-card" [class.expanded]="selectedOrderId() === order.orderId">
+          <!-- Card Header / Summary -->
+          <div class="card-header" (click)="selectOrder(order.orderId)">
+            <span class="id-badge">#{{ order.orderId }}</span>
+            
+            <div class="summary-info">
+              <span class="date-text">{{ formatDate(order.orderDate) }}</span>
+              <span class="total-text">{{ order.total | currency }}</span>
             </div>
-            <div class="text-sm text-gray-600">
-              <span class="mr-2">Quantity:</span>
-              <span class="font-semibold text-gray-900">{{ product.qty }}</span>
+
+            <div class="card-actions">
+               <span class="status-pill inline-block" [ngClass]="getStatusClass(order.orderStatus)">
+                 {{ order.orderStatus | titlecase }}
+               </span>
+               <fa-icon [icon]="faChevronRight" 
+                        class="text-slate-300 transition-all duration-300"
+                        [class.rotate-90]="selectedOrderId() === order.orderId">
+               </fa-icon>
+            </div>
+          </div>
+
+          <!-- Expanded Content -->
+          <div *ngIf="selectedOrderId() === order.orderId" class="expanded-content">
+            <div class="details-wrapper">
+              <!-- Left: Item List -->
+              <div class="items-list-panel">
+                <div class="mb-4 font-black text-[10px] text-indigo-400 uppercase tracking-[0.2em] flex justify-between items-center">
+                   <span>Items in Order</span>
+                   <span class="bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{{ pastOrderProducts().length }} {{ pastOrderProducts().length === 1 ? 'Item' : 'Items' }}</span>
+                </div>
+                
+                <div class="divide-y divide-slate-50">
+                  <!-- Product Loading Spinner -->
+                  <div *ngIf="loadingProducts()" class="py-12 text-center">
+                     <fa-icon [icon]="faClock" class="text-3xl text-indigo-300 animate-spin"></fa-icon>
+                     <p class="text-xs text-slate-400 mt-2">Fetching item details...</p>
+                  </div>
+
+                  <!-- Product Items -->
+                  @for (product of pastOrderProducts(); track product.productId) {
+                    <div class="item-row group">
+                      <div class="item-media">
+                        <img [src]="getImageUrl(product.productImage)" 
+                             class="item-img" 
+                             [alt]="product.productName">
+                      </div>
+
+                      <div class="flex-1">
+                        <h4 class="item-name">{{ product.productName }}</h4>
+                        
+                        <div class="item-meta">
+                           <div class="meta-pill">Qty: <b>{{ product.qty }}</b></div>
+                           <div class="meta-pill">Rate: <b>{{ product.price | currency }}</b></div>
+                           <div class="meta-pill bg-emerald-50 text-emerald-700">PAID</div>
+                        </div>
+
+                        <div class="item-pricing">
+                           <div class="price-breakdown">Item Total</div>
+                           <div class="item-total-price">{{ product.amount | currency }}</div>
+                        </div>
+                      </div>
+                    </div>
+                  }
+
+                  <!-- No products found state -->
+                  <div *ngIf="!loadingProducts() && pastOrderProducts().length === 0" class="py-12 text-center bg-slate-50/50 rounded-xl m-4 border border-dashed border-slate-200">
+                     <fa-icon [icon]="faBox" class="text-3xl text-slate-200 mb-2"></fa-icon>
+                     <p class="text-sm text-slate-500 font-medium">No records found for ID #{{ order.orderId }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Delivery & Final Totals -->
+              <div class="delivery-panel">
+                <div class="panel-title"><fa-icon [icon]="faTruck" class="mr-2"></fa-icon>Delivery Destination</div>
+                
+                <div class="address-box shadow-sm">
+                   <p class="font-black text-slate-900 text-base mb-2">{{ order.userName }}</p>
+                   <p class="text-slate-600 text-sm leading-relaxed">
+                     {{ order.address }}<br>
+                     {{ order.city }}, {{ order.state }} {{ order.pin }}
+                   </p>
+                </div>
+                
+                <div class="final-total-box">
+                  <span class="final-total-label">Grand Total Paid</span>
+                  <span class="final-total-amount">{{ order.total | currency }}</span>
+                  <div class="mt-4 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="text-[10px] uppercase font-bold tracking-widest text-indigo-100">Transaction Secured</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        }
-      </div>
       }
-    </div>
-
-    <!-- Right Column: Delivery + Summary (Steady Card) -->
-    <div class="space-y-6">
-      <!-- Delivery Address -->
-      <div class="bg-gray-100 p-5 rounded-lg space-y-2 sticky top-6">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
-          Delivery Address
-        </h2>
-        <p><strong>Name:</strong> {{ pastOrder()?.userName }}</p>
-        <p><strong>Address:</strong> {{ pastOrder()?.address }}</p>
-        <p><strong>City:</strong> {{ pastOrder()?.city }}</p>
-        <p><strong>State:</strong> {{ pastOrder()?.state }}</p>
-        <p><strong>Pin:</strong> {{ pastOrder()?.pin }}</p>
-      </div>
-
-      <!-- Summary -->
-      <div class="bg-gray-100 p-5 rounded-lg space-y-2 sticky top-[280px]">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Summary</h2>
-        <p><strong>Order Total:</strong> {{ pastOrder()?.total | currency }}</p>
-        <p><strong>Shipping Charges:</strong> Free</p>
-        <hr />
-        <p class="text-lg font-bold text-gray-900">
-          Total: {{ pastOrder()?.total | currency }}
-        </p>
-      </div>
     </div>
   </div>
 </div>

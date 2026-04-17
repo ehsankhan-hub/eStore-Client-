@@ -7,6 +7,8 @@ export interface User {
   pin: string;
   email: string;
   password: string;
+  stripe_account_id?: string;
+  is_stripe_connected?: boolean;
 }
 
 export interface UserLogin {
@@ -15,6 +17,7 @@ export interface UserLogin {
 }
 
 export interface LoggedInUser {
+  id?: number;
   firstName: string;
   lastName: string;
   address: string;
@@ -22,6 +25,9 @@ export interface LoggedInUser {
   state: string;
   pin: string;
   email: string; //new
+  role?: string;
+  stripe_account_id?: string;
+  is_stripe_connected?: boolean;
 }
 
 export interface LoginToken {

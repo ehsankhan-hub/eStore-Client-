@@ -40,4 +40,8 @@ export class SellerService {
   updateProduct(productId: number | string, productData: any): Observable<any> {
     return this.http.put(`${API_URL}/product/${productId}`, productData);
   }
+
+  getOrders(sellerId: number | string): Observable<any> {
+    return this.http.get<any>(`${API_URL}/orders/${sellerId}`);
+  }
 }

@@ -50,6 +50,10 @@ export const routes: Routes = [
     path: 'seller',
     loadChildren: () => import('./components/seller/seller.routes').then(m => m.sellerRoutes)
   },
+  {
+    path: 'admin',
+    loadComponent: () => import('./components/admin/admin-dashboard.component').then(m => m.AdminDashboardComponent)
+  },
   { path: '', redirectTo: '/home', pathMatch: 'full' },
   { path: '**', component: NotFoundComponent },
 ];

@@ -1,6 +1,7 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { CartItem } from '../../types/cart.type';
 import { Product } from '../../types/products.type';
+import { SystemSettingsService } from '../../../../services/system-settings.service';
 
 function isBrowser(): boolean {
   return typeof window !== 'undefined' && typeof sessionStorage !== 'undefined';
@@ -12,6 +13,7 @@ function isBrowser(): boolean {
 export class CartStoreItem {
   private readonly _initialized = signal(false);
   private readonly _products = signal<CartItem[]>([]);
+  private settingsService = inject(SystemSettingsService);
 
   constructor() {
     if (isBrowser()) {
@@ -43,6 +45,20 @@ export class CartStoreItem {
     this._products().reduce((sum, item) => sum + item.amount, 0)
   );
 
+  readonly shippingCost = computed(() => {
+    const total = this.totalAmount();
+    if (total === 0) return 0;
+    
+    const threshold = this.settingsService.shippingFreeThreshold();
+    const baseRate = this.settingsService.shippingBaseRate();
+    
+    return total >= threshold ? 0 : baseRate;
+  });
+
+  readonly grandTotal = computed(() => 
+    parseFloat((this.totalAmount() + this.shippingCost()).toFixed(2))
+  );
+
   readonly totalProducts = computed(() =>
     this._products().reduce((count, item) => count + item.quantity, 0)
   );
@@ -50,6 +66,9 @@ export class CartStoreItem {
   readonly cart = computed(() => ({
     products: this._products(),
     totalAmount: this.totalAmount(),
+    shippingCost: this.shippingCost(),
+    grandTotal: this.grandTotal(),
+    shippingFreeThreshold: this.settingsService.shippingFreeThreshold(),
     totalProducts: this.totalProducts(),
   }));
 

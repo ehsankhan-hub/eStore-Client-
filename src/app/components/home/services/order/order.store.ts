@@ -1,9 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Order, PastOrder } from '../../types/order.type';
+import { Order, OrderItem, PastOrder } from '../../types/order.type';
 import { OrderService } from './order.service';
 import { UserService } from '../user/user.service';
+import { CartStoreItem } from '../cart/cart.storeItem';
 import { DeliveryAddress } from '../../types/cart.type';
-import { Observable, tap, catchError } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,8 @@ export class OrderStore {
 
   constructor(
     private orderService: OrderService,
-    private userService: UserService
+    private userService: UserService,
+    private cartStore: CartStoreItem
   ) {}
 
   // Actions
@@ -57,18 +59,54 @@ export class OrderStore {
     this._loading.set(true);
     this._error.set(null);
 
-    return this.orderService.saveOrder(deliveryAddress, userEmail).pipe(
+    // 1. Get the "Single Source of Truth" - Synchronous snapshot of the cart
+    const cart = this.cartStore.cart();
+    
+    if (!cart || !cart.products || cart.products.length === 0) {
+      this._error.set('Cannot create order: Cart is empty.');
+      this._loading.set(false);
+      return throwError(() => new Error('Cart is empty'));
+    }
+
+    // 2. Map cart products to order details
+    const orderDetails: OrderItem[] = cart.products.map(item => ({
+      productId: item.product.id,
+      qty: item.quantity,
+      price: this.formatPrice(item.product.price),
+      amount: this.formatPrice(item.amount)
+    }));
+
+    // 3. Build the final Order payload
+    const orderPayload: Order = {
+      userName: deliveryAddress.userName,
+      address: deliveryAddress.address,
+      city: deliveryAddress.city,
+      state: deliveryAddress.state,
+      pin: deliveryAddress.pin,
+      total: this.formatPrice(cart.totalAmount),
+      shippingCost: this.formatPrice(cart.shippingCost),
+      userEmail: userEmail,
+      orderDetails: orderDetails
+    };
+
+    console.log('OrderStore: Orchestrated payload from SSOT:', orderPayload);
+
+    return this.orderService.saveOrder(orderPayload).pipe(
       tap(result => {
-        // Refresh orders to include the new one
         this.loadOrders();
         this._loading.set(false);
       }),
       catchError(error => {
         this._error.set(error.message || 'Failed to create order');
         this._loading.set(false);
-        throw error;
+        return throwError(() => error);
       })
     );
+  }
+
+  private formatPrice(price: any): number {
+    const num = Number(typeof price === 'string' ? price.replace(/[^0-9.-]/g, '') : price);
+    return Math.round((num || 0) * 100) / 100;
   }
 
   refreshOrders(): void {

@@ -89,6 +89,7 @@ export class HeaderComponent implements AfterViewInit {
   displaySearch = signal(true);
 
   isUserAuthenticated = signal(false);
+  isAdmin = signal(false);
   userName = signal('');
   loggedInUser = signal<LoggedInUser>({
     firstName: '',
@@ -118,6 +119,7 @@ export class HeaderComponent implements AfterViewInit {
     // Initialize authentication state and user data from UserService
     this.isUserAuthenticated.set(this.userService.isAuthenticated());
     this.loggedInUser.set(this.userService.loggedInUserInfo());
+    this.isAdmin.set(this.userService.loggedInUserInfo().role === 'admin');
 
     // Update the userName signal whenever loggedInUser changes
     effect(() => {
@@ -126,13 +128,20 @@ export class HeaderComponent implements AfterViewInit {
 
       const user = this.userService.loggedInUserInfo();
       this.loggedInUser.set(user);
+      this.isAdmin.set(user.role === 'admin');
 
       if (isAuth) {
         this.userName.set(user.firstName);
       } else {
         this.userName.set('');
+        this.isAdmin.set(false);
       }
     });
+  }
+
+  navigateToAdmin(): void {
+    this.dropdownVisible.set(false);
+    this.router.navigate(['/admin']);
   }
 
   onClickSearch(keyword: string, categoryIdInput: string): void {

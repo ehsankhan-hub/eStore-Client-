@@ -26,15 +26,6 @@ import { CommonModule } from '@angular/common';
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
-  providers: [
-    CategoryService,
-    CategoriesStoreItem,
-    ProductsStoreItem,
-    ProductsService,
-    CartStoreItem,
-    UserService,
-    OrderService,
-  ],
 })
 export class HomeComponent {
   faBars = faBars;

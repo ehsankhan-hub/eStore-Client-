@@ -2,7 +2,9 @@ import { computed, Injectable, signal } from '@angular/core';
 import { Category } from '../../types/category';
 import { CategoryService } from './category.service';
 
-@Injectable()
+@Injectable({
+  providedIn: 'root'
+})
 export class CategoriesStoreItem {
   private readonly _categories = signal<Category[]>([]);
   readonly displayOptions = signal(true);

@@ -1,0 +1,223 @@
+<div class="admin-container">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>eStore Owner</h2>
+    </div>
+    <nav class="nav-links">
+      <button [class.active]="activeTab === 'stats'" (click)="activeTab = 'stats'">
+        <i class="fas fa-chart-line"></i> Performance
+      </button>
+      <button [class.active]="activeTab === 'blocks'" (click)="activeTab = 'blocks'">
+        <i class="fas fa-th-large"></i> Homepage Blocks
+      </button>
+      <button (click)="activeTab = 'settings'">
+        <i class="fas fa-cog"></i> Global Settings
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="content">
+    
+    <!-- Stats Section -->
+    <div *ngIf="activeTab === 'stats'" class="tab-content">
+      <h1 class="page-title">Platform Overview</h1>
+      <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Buyers</h3>
+            <p class="stat-value">{{ stats.buyers }}</p>
+            <span class="stat-note">{{ stats.newUsers }} new this month</span>
+        </div>
+        <div class="stat-card">
+            <h3>Active Sellers</h3>
+            <p class="stat-value">{{ stats.sellers }}</p>
+            <span class="stat-note">Platform Partners</span>
+        </div>
+        <div class="stat-card">
+            <h3>System Admins</h3>
+            <p class="stat-value">{{ stats.admins }}</p>
+            <span class="stat-note">Authorized Access</span>
+        </div>
+        <div class="stat-card">
+            <h3>Total Products</h3>
+            <p class="stat-value">{{ stats.products }}</p>
+        </div>
+        <div class="stat-card revenue">
+            <h3>Released Revenue</h3>
+            <p class="stat-value">{{ stats.revenue | currency:'USD' }}</p>
+        </div>
+        <div class="stat-card pending">
+            <h3>Pending Revenue</h3>
+            <p class="stat-value text-orange-500">{{ stats.pendingRevenue | currency:'USD' }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Homepage Blocks Table -->
+    <div *ngIf="activeTab === 'blocks'" class="tab-content">
+        <h1 class="page-title">Manage Homepage Layout</h1>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Order</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let block of homepageBlocks">
+                        <td>#{{ block.id }}</td>
+                        <td><span class="badge">{{ block.block_type }}</span></td>
+                        <td>{{ block.title }}</td>
+                        <td>{{ block.display_order }}</td>
+                        <td>
+                            <span class="status-indicator" [class.active]="block.is_active"></span>
+                            {{ block.is_active ? 'Active' : 'Hidden' }}
+                        </td>
+                        <td>
+                            <button class="edit-btn" (click)="editBlock(block)">Edit Layout</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Block Editor Form -->
+    <div *ngIf="activeTab === 'editor' && selectedBlock" class="tab-content">
+        <div class="editor-header">
+            <button class="back-btn" (click)="activeTab = 'blocks'">&larr; Back to list</button>
+            <h1>Editing: {{ selectedBlock.title }}</h1>
+        </div>
+
+        <div class="editor-form card">
+            <div class="form-group">
+                <label>Card Title</label>
+                <input type="text" [(ngModel)]="selectedBlock.title">
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Link Text</label>
+                    <input type="text" [(ngModel)]="selectedBlock.link_text">
+                </div>
+                <div class="form-group">
+                    <label>Link URL</label>
+                    <input type="text" [(ngModel)]="selectedBlock.link_url">
+                </div>
+            </div>
+
+            <h3 class="section-divider">Sub-Items (4 Boxes)</h3>
+            <div class="items-editor">
+                <div *ngFor="let item of selectedBlock.items_payload; let i = index" class="item-edit-row">
+                    <span class="item-index">Box {{i + 1}}</span>
+                    <input type="text" placeholder="Name" [(ngModel)]="item.name">
+                    <input type="text" placeholder="Image Path" [(ngModel)]="item.image">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button class="cancel-btn" (click)="activeTab = 'blocks'">Cancel</button>
+                <button class="save-btn" (click)="saveBlock()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Settings Section -->
+    <div *ngIf="activeTab === 'settings'" class="tab-content">
+        <h1 class="page-title">Global Store Settings</h1>
+        
+        <!-- Debugging message if no settings are loaded -->
+        <div *ngIf="systemSettings.length === 0" class="card empty-state">
+            <p>⚠️ No settings found in database or still loading. Check browser console (F12) for errors.</p>
+        </div>
+
+        <div class="settings-container" *ngIf="systemSettings.length > 0">
+            <div class="card settings-card">
+                <div class="settings-group">
+                    <h2>💰 Fees & Commissions</h2>
+                    <div *ngFor="let s of systemSettings">
+                        <div class="setting-item" *ngIf="s.category.toUpperCase() === 'FEES'">
+                            <div class="setting-info">
+                                <label>{{ s.setting_key.split('_').join(' ') | titlecase }}</label>
+                                <span>{{ s.description }}</span>
+                            </div>
+                            <div class="setting-input-wrapper">
+                                <input type="text" [(ngModel)]="s.setting_value" (change)="updateSetting(s)">
+                                <span class="input-unit">%</span>
+                                <span class="save-indicator" *ngIf="isSaving === s.setting_key">Saving...</span>
+                                <span class="success-indicator" *ngIf="!isSaving && s.setting_value">✅</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h2>🚚 Shipping & Logistics</h2>
+                    <div *ngFor="let s of systemSettings">
+                        <div class="setting-item" *ngIf="s.category.toUpperCase() === 'SHIPPING' || s.category.toUpperCase() === 'LOGISTICS'">
+                            <div class="setting-info">
+                                <label>{{ s.setting_key.split('_').join(' ') | titlecase }}</label>
+                                <span>{{ s.description }}</span>
+                            </div>
+                            <div class="setting-input-wrapper">
+                                <!-- Specialized input for Logistics Provider -->
+                                <select *ngIf="s.setting_key === 'LOGISTICS_PROVIDER'" 
+                                        [(ngModel)]="s.setting_value" (change)="updateSetting(s)" class="status-select">
+                                    <option value="Local">Local Delivery</option>
+                                    <option value="Aramex">Aramex (Regional)</option>
+                                    <option value="DHL">DHL (International)</option>
+                                    <option value="FedEx">FedEx</option>
+                                </select>
+
+                                <!-- Specialized password input for API Keys -->
+                                <div class="password-input-wrapper" *ngIf="s.setting_key === 'LOGISTICS_API_KEY'">
+                                    <input type="password" [(ngModel)]="s.setting_value" (change)="updateSetting(s)">
+                                </div>
+
+                                <!-- Standard currency/number input for rates -->
+                                <div class="currency-input" *ngIf="s.category === 'SHIPPING'">
+                                    <input type="text" [(ngModel)]="s.setting_value" (change)="updateSetting(s)">
+                                    <span class="input-unit">$</span>
+                                </div>
+
+                                <!-- Generic input for everything else -->
+                                <input *ngIf="s.setting_key !== 'LOGISTICS_PROVIDER' && s.setting_key !== 'LOGISTICS_API_KEY' && s.category !== 'SHIPPING'" 
+                                       type="text" [(ngModel)]="s.setting_value" (change)="updateSetting(s)">
+
+                                <span class="save-indicator" *ngIf="isSaving === s.setting_key">Saving...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h2>⚙️ System Control</h2>
+                    <div *ngFor="let s of systemSettings">
+                        <div class="setting-item" *ngIf="s.category.toUpperCase() === 'SYSTEM'">
+                            <div class="setting-info">
+                                <label>{{ s.setting_key.split('_').join(' ') | titlecase }}</label>
+                                <span>{{ s.description }}</span>
+                            </div>
+                            <div class="setting-input-wrapper">
+                                <select *ngIf="s.setting_key === 'MAINTENANCE_MODE'" [(ngModel)]="s.setting_value" (change)="updateSetting(s)" class="status-select">
+                                    <option value="true">Enable (Store Offline)</option>
+                                    <option value="false">Disable (Store Online)</option>
+                                </select>
+                                <input *ngIf="s.setting_key !== 'MAINTENANCE_MODE'" type="text" [(ngModel)]="s.setting_value" (change)="updateSetting(s)">
+                                <span class="save-indicator" *ngIf="isSaving === s.setting_key">Saving...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </main>
+</div>

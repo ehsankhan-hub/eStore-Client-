@@ -1,2 +1,7 @@
 <app-toast-container></app-toast-container>
-<router-outlet></router-outlet>
+
+@if (isMaintenance()) {
+  <app-maintenance></app-maintenance>
+} @else {
+  <router-outlet></router-outlet>
+}
