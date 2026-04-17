@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RatingsComponent } from '../ratings/ratings.component';
 import { ProductsStoreItem } from '../home/services/product/products.storeItem';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { 
-  faBoxOpen, faShoppingCart, faStar, faBolt, faTruck, faHeart, faEye, faTag, faCheckCircle, faTimesCircle 
+import {
+  faBoxOpen, faShoppingCart, faStar, faBolt, faTruck, faHeart, faEye, faTag, faCheckCircle, faTimesCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { RouterLink } from '@angular/router';
 import { CartStoreItem } from '../home/services/cart/cart.storeItem';
@@ -39,15 +39,15 @@ export class ProductsComponent {
   constructor(
     public productStoreItem: ProductsStoreItem,
     private cart: CartStoreItem
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   getImageUrl(imageName: any | undefined): string {
     if (!imageName || imageName === 'undefined' || imageName === 'null') {
       return `${this.imageBasePath}shop-1.jpg`;
     }
-    
+
     // 1. Absolute URLs (external images)
     if (imageName.startsWith('http')) {
       return imageName;
@@ -57,7 +57,7 @@ export class ProductsComponent {
     if (imageName.startsWith('assets/') || imageName.startsWith('shop-')) {
       // Ensure paths like assets/images/ are properly formed
       if (imageName.startsWith('assets/') && !imageName.includes('images/')) {
-         // Fix if needed, but usually shop-* are in assets/images/
+        // Fix if needed, but usually shop-* are in assets/images/
       }
       return imageName.startsWith('assets/') ? imageName : `${this.imageBasePath}${imageName}`;
     }
@@ -100,7 +100,7 @@ export class ProductsComponent {
   addToCart(product: Product) {
     const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
     const inCart = this.cart.getQuantityInCart(product.id);
-    
+
     if (inCart < totalStock) {
       this.cart.addProduct(product);
     } else {
@@ -114,7 +114,7 @@ export class ProductsComponent {
     // Adds mock data for badges and features missing from base Product type
     return {
       ...product,
-      discount: product.price > 100 ? 15 : 0, 
+      discount: product.price > 100 ? 15 : 0,
       isBestSeller: product.ratings > 4.5,
       isNewArrival: product.id > 10,
       freeShipping: product.price > 50,
@@ -122,7 +122,7 @@ export class ProductsComponent {
       sku: `PROD-${product.id}`,
       reviewCount: Math.floor(Math.random() * 100) + 10,
       shippingInfo: 'Ships in 2-3 days',
-      quickViewAvailable: true 
+      quickViewAvailable: true
     };
   }
 
@@ -168,12 +168,12 @@ export class ProductsComponent {
     const inCart = this.cart.getQuantityInCart(product.id);
     return (totalStock - inCart) > 0;
   }
-  
+
   getStockLevel(product: Product): string {
     const totalStock = (product as any).stock_quantity ?? product.stock ?? 0;
     const inCart = this.cart.getQuantityInCart(product.id);
     const available = totalStock - inCart;
-    
+
     if (totalStock > 0) {
       return available > 0 ? `${available} in stock` : 'Out of stock';
     }

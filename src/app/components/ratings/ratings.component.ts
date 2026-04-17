@@ -9,6 +9,7 @@ import { faStar as faStarEmpty } from '@fortawesome/free-regular-svg-icons';
 
 @Component({
   selector: 'app-ratings',
+  standalone: true,
   imports: [FontAwesomeModule],
   templateUrl: './ratings.component.html',
   styleUrl: './ratings.component.css',
