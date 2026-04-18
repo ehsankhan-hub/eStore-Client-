@@ -2,6 +2,7 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { filter, interval, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
+import { API_BASE_URL } from '../../../../api-url';
 
 export interface AppNotification {
   id: string;
@@ -24,7 +25,7 @@ export class RealtimeNotificationService {
   unreadCount = signal<number>(0);
   
   private lastKnownOrderCount = 0;
-  private readonly apiBase = 'http://localhost:5004/api';
+  private readonly apiBase = API_BASE_URL;
 
   constructor() {
     // Start the "Pulse" if user is logged in
@@ -57,8 +58,7 @@ export class RealtimeNotificationService {
   }
 
   private getUserEmail(): string {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.email || '';
+    return localStorage.getItem('email') || '';
   }
 
   pushNotification(config: { type: AppNotification['type'], title: string, message: string }) {

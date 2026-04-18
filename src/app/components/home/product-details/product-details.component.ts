@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { CartStoreItem } from '../services/cart/cart.storeItem';
 import { faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { API_BASE_URL } from '../../../api-url';
 
 @Component({
   selector: 'app-product-details',
@@ -58,7 +59,7 @@ export class ProductDetailsComponent {
       return imageName;
     }
     if (imageName.startsWith('uploads/')) {
-      return window.location.hostname === 'localhost' ? `http://localhost:5004/${imageName}` : `https://short-coats-dig.loca.lt/${imageName}`;
+      return `${API_BASE_URL}/${imageName.replace(/^\/+/, '')}`;
     }
     
     return `${this.imageBasePath}${imageName}`;

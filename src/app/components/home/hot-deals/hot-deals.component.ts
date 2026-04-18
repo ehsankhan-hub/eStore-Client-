@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ProductsService } from '../services/product/products.service';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faFire, faClock, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { API_BASE_URL } from '../../../api-url';
 
 @Component({
   selector: 'app-hot-deals',
@@ -93,7 +94,7 @@ export class HotDealsComponent implements OnInit {
     
     // Check if it's a backend upload
     if (imageName.includes('-') && imageName.includes('.')) {
-        return window.location.hostname === 'localhost' ? `http://localhost:5004/api/uploads/${imageName}` : `https://short-coats-dig.loca.lt/api/uploads/${imageName}`;
+        return `${API_BASE_URL}/uploads/${imageName}`;
     }
     
     return `/assets/images/${imageName}`;

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, from, map, switchMap, catchError, throwError } from 'rxjs';
 import { loadStripe, Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { UserService } from '../user/user.service';
+import { API_BASE_URL } from '../../../../api-url';
 
 @Injectable({
   providedIn: 'root'
@@ -19,13 +20,16 @@ export class PaymentService {
     this.stripePromise = loadStripe(this.publishableKey);
   }
 
-  // 1. Create PaymentIntent on the Server
-  createPaymentIntent(amount: number, currency: string = 'usd'): Observable<string> {
-    const url = 'http://localhost:5004/api/payments/create-intent';
+  // 1. Create PaymentIntent on the Server (amount derived from lines — not client totals)
+  createPaymentIntent(
+    lines: { productId: number; qty: number }[],
+    currency: string = 'usd'
+  ): Observable<string> {
+    const url = `${API_BASE_URL}/payments/create-intent`;
     const authToken = this.userService.authToken();
     const headers = new HttpHeaders().set('Authorization', authToken || '');
 
-    return this.http.post<{ clientSecret: string }>(url, { amount, currency }, { headers })
+    return this.http.post<{ clientSecret: string }>(url, { lines, currency }, { headers })
       .pipe(
         map(res => res.clientSecret),
         catchError(err => {

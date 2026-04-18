@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../home/services/user/user.service';
 import { SellerService } from '../../../services/seller.service';
+import { API_BASE_URL } from '../../../api-url';
 
 @Component({
   selector: 'app-seller-dashboard',
@@ -394,7 +395,7 @@ export class SellerDashboardComponent implements OnInit {
 
   onboardStripe() {
     this.loadingOnboarding.set(true);
-    const url = 'http://localhost:5004/api/payments/onboard-seller';
+    const url = `${API_BASE_URL}/payments/onboard-seller`;
     const headers = { 'Authorization': this.userService.authToken() || '' };
 
     this.http.post<{ url: string }>(url, {}, { headers }).subscribe({

@@ -13,6 +13,7 @@ import { RatingsComponent } from '../../ratings/ratings.component';
 import { CartItem } from '../types/cart.type';
 import { LoggedInUser } from '../types/user.type';
 import { PaymentService } from '../services/payment/payment.service';
+import { API_BASE_URL } from '../../../api-url';
 import { StripeCardElement, StripeElements } from '@stripe/stripe-js';
 
 @Component({
@@ -256,7 +257,7 @@ export class CartComponent {
     }
 
     // 3. Backend Uploads
-    const apiHost = window.location.hostname === 'localhost' ? 'http://localhost:5004/api/' : 'https://short-coats-dig.loca.lt/api/';
+    const apiHost = `${API_BASE_URL}/`;
     
     // Remove uploads/ prefix if it already exists to avoid duplication with the apiHost
     const cleanName = imageName.replace(/^uploads\//, '');
@@ -332,10 +333,13 @@ export class CartComponent {
     this.cardProcessing.set(true);
     this.disableCheckout = true;
 
-    const amount = this.cartStore.cart().grandTotal;
-    
-    // 1. Create Payment Intent
-    this.paymentService.createPaymentIntent(amount).subscribe({
+    const lines = this.cartStore.cart().products.map((item) => ({
+      productId: item.product.id,
+      qty: item.quantity,
+    }));
+
+    // 1. Create Payment Intent (amount computed on server from lines)
+    this.paymentService.createPaymentIntent(lines).subscribe({
       next: (clientSecret) => {
         // 2. Confirm Payment with Stripe
         this.paymentService.confirmCardPayment(clientSecret, this.card!).subscribe({

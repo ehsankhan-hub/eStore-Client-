@@ -20,6 +20,7 @@ import {
   faTimesCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { FormsModule } from '@angular/forms';
+import { API_BASE_URL } from '../../../api-url';
 
 @Component({
   selector: 'app-past-orders',
@@ -111,9 +112,7 @@ export class PastOrdersComponent {
       return imageName;
     }
 
-    const baseURL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5004/api/' 
-      : 'https://short-coats-dig.loca.lt/api/';
+    const baseURL = `${API_BASE_URL}/`;
 
     if (imageName.startsWith('uploads/')) {
       return `${baseURL}${imageName}`;

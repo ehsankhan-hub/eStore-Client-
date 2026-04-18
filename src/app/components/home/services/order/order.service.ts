@@ -10,6 +10,7 @@ import {
 } from '../../types/order.type';
 import { DeliveryAddress } from '../../types/cart.type';
 import { UserService } from '../user/user.service';
+import { API_BASE_URL } from '../../../../api-url';
 
 @Injectable({
   providedIn: 'root'
@@ -36,9 +37,7 @@ export class OrderService {
   }
 
   saveOrder(order: Order): Observable<any> {
-    const baseURL = window.location.hostname === 'localhost'
-      ? 'http://localhost:5004/api/orders/add'
-      : 'https://short-coats-dig.loca.lt/api/orders/add';
+    const baseURL = `${API_BASE_URL}/orders/add`;
 
     const authToken = this.userService.authToken();
     const headers = authToken 
@@ -56,9 +55,7 @@ export class OrderService {
     );
   }
   getOrders(userEmail: string): Observable<PastOrder[]> {
-    const baseURL = window.location.hostname === 'localhost'
-      ? 'http://localhost:5004/api/orders/allorders?userEmail='
-      : 'https://short-coats-dig.loca.lt/api/orders/allorders?userEmail=';
+    const baseURL = `${API_BASE_URL}/orders/allorders?userEmail=`;
     const url = `${baseURL}${userEmail}`;
 
     let headers: HttpHeaders;
@@ -72,9 +69,7 @@ export class OrderService {
     return this.httpClient.get<PastOrder[]>(url, { headers });
   }
   getOrderProducts(orderId: number): Observable<PastOrderProduct[]> {
-    const baseURL = window.location.hostname === 'localhost'
-      ? 'http://localhost:5004/api/orders/orderproducts?orderId='
-      : 'https://short-coats-dig.loca.lt/api/orders/orderproducts?orderId=';
+    const baseURL = `${API_BASE_URL}/orders/orderproducts?orderId=`;
     const url = `${baseURL}${orderId}`;
 
     let headers: HttpHeaders;

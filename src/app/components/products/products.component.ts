@@ -9,6 +9,7 @@ import {
 import { RouterLink } from '@angular/router';
 import { CartStoreItem } from '../home/services/cart/cart.storeItem';
 import { Product } from '../home/types/products.type';
+import { API_BASE_URL } from '../../api-url';
 
 @Component({
   selector: 'app-products',
@@ -66,11 +67,7 @@ export class ProductsComponent {
 
     // 3. Seller Uploads (PRIORITY)
     // If it's not a known local asset, it must be a seller upload from the server
-    const serverBase = window.location.hostname === 'localhost' 
-      ? 'http://localhost:5004/api/uploads/' 
-      : 'https://short-coats-dig.loca.lt/api/uploads/';
-    
-    return `${serverBase}${imageName}`;
+    return `${API_BASE_URL}/uploads/${imageName}`;
   }
 
   getCurrentImage(product: Product): string {

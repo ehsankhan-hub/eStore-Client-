@@ -1,14 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../../../api-url';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class HomepageService {
-  private readonly baseURL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5004/api/homepage'
-    : 'https://short-coats-dig.loca.lt/api/homepage';
+  private readonly baseURL = `${API_BASE_URL}/homepage`;
 
   constructor(private http: HttpClient) {}
 

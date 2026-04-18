@@ -1,15 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Product } from '../../types/products.type';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { API_BASE_URL } from '../../../../api-url';
 import { filter, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductsService {
-  private readonly baseURL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5004/api/products'
-    : 'https://short-coats-dig.loca.lt/api/products';
+  private readonly baseURL = `${API_BASE_URL}/products`;
   constructor(private http: HttpClient) {}
 
   getAllProducts(filters?: {

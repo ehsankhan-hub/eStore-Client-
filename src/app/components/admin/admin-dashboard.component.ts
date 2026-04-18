@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { API_BASE_URL } from '../../api-url';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -43,9 +44,7 @@ export class AdminDashboardComponent implements OnInit {
   selectedBlock: any = null;
   activeTab: string = 'stats';
 
-  private readonly apiBase = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5004/api'
-    : 'https://short-coats-dig.loca.lt/api';
+  private readonly apiBase = API_BASE_URL;
 
   ngOnInit(): void {
     const token = localStorage.getItem('token');

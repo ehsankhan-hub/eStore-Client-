@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../api-url';
 
 @Injectable({
   providedIn: 'root'
@@ -10,9 +11,7 @@ export class SystemSettingsService {
   shippingFreeThreshold = signal<number>(500);
   shippingBaseRate = signal<number>(25);
 
-  private readonly apiBase = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5004/api'
-    : 'https://short-coats-dig.loca.lt/api';
+  private readonly apiBase = API_BASE_URL;
 
   loadSystemSettings() {
     this.http.get<any[]>(`${this.apiBase}/admin/settings/public`).subscribe({

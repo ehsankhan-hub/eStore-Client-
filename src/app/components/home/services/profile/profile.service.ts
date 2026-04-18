@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { API_BASE_URL } from '../../../../api-url';
 import { Observable, map } from 'rxjs';
 
 export interface PersonalInfo {
@@ -55,9 +56,7 @@ export interface ProfileResponse {
   providedIn: 'root'
 })
 export class ProfileService {
-  private readonly apiUrl = window.location.hostname === 'localhost'
-    ? 'http://localhost:5004/api/users'
-    : 'https://short-coats-dig.loca.lt/api/users';
+  private readonly apiUrl = `${API_BASE_URL}/users`;
   
   // Signals for reactive state management
   profileData = signal<ProfileData | null>(null);
