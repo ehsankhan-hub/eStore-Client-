@@ -52,6 +52,32 @@ import { CommonModule } from '@angular/common';
              <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Add Product</span>
           </a>
 
+          <div class="h-px bg-white/10 my-6 mx-4"></div>
+          <p *ngIf="!isSidebarCollapsed()" class="text-[10px] text-white/20 font-black uppercase tracking-[0.2em] px-4 mb-4 animate-fade-in">Insights & Service</p>
+
+          <!-- Sales Analytics -->
+          <a [routerLink]="['/seller', 'analytics']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
+             class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
+             <svg class="w-6 h-6 flex-shrink-0 group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+             <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Sales Analytics</span>
+          </a>
+
+          <!-- Notification Center -->
+          <a [routerLink]="['/seller', 'notifications']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
+             class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
+             <div class="relative">
+                <span class="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-full border border-[#020617] animate-pulse"></span>
+                <svg class="w-6 h-6 flex-shrink-0 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+             </div>
+             <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Alerts</span>
+          </a>
+
+          <a [routerLink]="['/seller', 'support']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
+             class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
+             <svg class="w-6 h-6 flex-shrink-0 group-hover:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+             <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Concierge</span>
+          </a>
+
           <div class="h-px bg-white/5 my-8 mx-4"></div>
 
           <a [routerLink]="['/home', 'products']" 

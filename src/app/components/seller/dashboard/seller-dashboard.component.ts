@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../home/services/user/user.service';
@@ -80,6 +80,117 @@ import { SellerService } from '../../../services/seller.service';
         </div>
       </div>
       
+      <!-- Premium Analytics Section -->
+      <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100 mb-12 relative overflow-hidden group transition-all duration-700 hover:shadow-2xl hover:shadow-indigo-500/5">
+        <!-- Shine Effect -->
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/0 via-white/0 to-indigo-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-4 relative z-10">
+          <div>
+            <h3 class="text-2xl font-black text-gray-900 flex items-center gap-4">
+               <span class="w-2 h-8 bg-indigo-500 rounded-full"></span>
+               Revenue Velocity
+            </h3>
+            <p class="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2 ml-6">Real-time performance metrics</p>
+          </div>
+
+          <div class="flex bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+             <button (click)="activeTab.set('overview')" 
+                     [class.bg-white]="activeTab() === 'overview'"
+                     [class.shadow-sm]="activeTab() === 'overview'"
+                     [class.text-indigo-600]="activeTab() === 'overview'"
+                     [class.text-gray-400]="activeTab() !== 'overview'"
+                     class="px-5 py-2 rounded-xl text-xs font-black transition-all">Overview</button>
+             <button (click)="activeTab.set('category')" 
+                     [class.bg-white]="activeTab() === 'category'"
+                     [class.shadow-sm]="activeTab() === 'category'"
+                     [class.text-indigo-600]="activeTab() === 'category'"
+                     [class.text-gray-400]="activeTab() !== 'category'"
+                     class="px-5 py-2 rounded-xl text-xs font-black transition-all ml-1">By Category</button>
+          </div>
+        </div>
+
+        <!-- Overview: The SVG Graph -->
+        <div *ngIf="activeTab() === 'overview'" class="h-64 relative w-full px-2 animate-fade-in">
+            <!-- Grid Lines -->
+            <div class="absolute inset-x-0 bottom-0 h-px bg-gray-100 italic font-mono text-[9px] text-gray-300 flex items-center justify-end pr-2">0.00</div>
+            <div class="absolute inset-x-0 bottom-1/4 h-px bg-gray-50 italic font-mono text-[9px] text-gray-200 flex items-center justify-end pr-2">25k</div>
+            <div class="absolute inset-x-0 bottom-2/4 h-px bg-gray-50 italic font-mono text-[9px] text-gray-200 flex items-center justify-end pr-2">50k</div>
+            <div class="absolute inset-x-0 bottom-3/4 h-px bg-gray-50 italic font-mono text-[9px] text-gray-200 flex items-center justify-end pr-2">75k</div>
+
+            <!-- SVG Area Chart -->
+            <svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 1000 200">
+                <defs>
+                    <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.3" />
+                        <stop offset="100%" stop-color="#4f46e5" stop-opacity="0" />
+                    </linearGradient>
+                    <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="50%" stop-color="#8b5cf6" />
+                        <stop offset="100%" stop-color="#4f46e5" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Area Fill -->
+                <path d="M0,180 Q100,160 200,140 T400,100 T600,60 T800,120 T1000,40 L1000,200 L0,200 Z" 
+                      fill="url(#areaGradient)" 
+                      style="opacity: 1; transition: all 1s ease-in-out;" />
+                
+                <!-- Border Line -->
+                <path d="M0,180 Q100,160 200,140 T400,100 T600,60 T800,120 T1000,40" 
+                      fill="none" 
+                      stroke="url(#lineGradient)" 
+                      stroke-width="5" 
+                      stroke-linecap="round"
+                      style="filter: drop-shadow(0 10px 10px rgba(99,102,241,0.2));" />
+
+                <!-- Data Points -->
+                <circle cx="200" cy="140" r="4" fill="white" stroke="#6366f1" stroke-width="2" />
+                <circle cx="400" cy="100" r="4" fill="white" stroke="#8b5cf6" stroke-width="2" />
+                <circle cx="600" cy="60"  r="4" fill="white" stroke="#8b5cf6" stroke-width="2" />
+                <circle cx="800" cy="120" r="4" fill="white" stroke="#4f46e5" stroke-width="2" />
+                <circle cx="1000" cy="40" r="6" fill="#4f46e5" stroke="white" stroke-width="3" />
+            </svg>
+
+            <!-- X-Axis Labels -->
+            <div class="flex justify-between mt-6 px-4 text-[10px] font-black text-gray-300 uppercase tracking-widest italic">
+                <span>Jan 01</span>
+                <span>Jan 08</span>
+                <span>Jan 15</span>
+                <span>Jan 22</span>
+                <span>Active Today</span>
+            </div>
+        </div>
+
+        <!-- By Category: Distribution Bars -->
+        <div *ngIf="activeTab() === 'category'" class="space-y-8 animate-fade-in">
+            <div *ngFor="let cat of categoryData()" class="group">
+                <div class="flex justify-between items-end mb-3">
+                    <div>
+                        <span class="text-sm font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+                            {{ cat.name }}
+                        </span>
+                        <span class="ml-3 text-[10px] font-bold text-gray-300">
+                           {{ cat.percentage | number:'1.0-0' }}% OF SALES
+                        </span>
+                    </div>
+                    <span class="text-sm font-black text-gray-900">{{ cat.value | currency }}</span>
+                </div>
+                <div class="h-3 w-full bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
+                    <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000 ease-out"
+                         [style.width.%]="cat.percentage">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State for Categories -->
+            <div *ngIf="categoryData().length === 0" class="py-10 text-center text-gray-400 font-bold italic text-sm">
+                Awaiting first categorized sale...
+            </div>
+        </div>
+      </div>
+      
       <!-- Recent Sales Table -->
       <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
         <div class="flex justify-between items-center mb-10">
@@ -103,6 +214,7 @@ import { SellerService } from '../../../services/seller.service';
                   <th class="pb-6 pl-4">Order ID</th>
                   <th class="pb-6">Date</th>
                   <th class="pb-6">Customer</th>
+                  <th class="pb-6">Category</th>
                   <th class="pb-6">Product</th>
                   <th class="pb-6">Qty</th>
                   <th class="pb-6 text-right pr-4">Earnings</th>
@@ -110,11 +222,16 @@ import { SellerService } from '../../../services/seller.service';
               </thead>
               <tbody class="divide-y divide-gray-50">
                 <tr *ngFor="let sale of sales()" class="group hover:bg-gray-50/50 transition-all">
-                  <td class="py-6 pl-4 font-mono text-xs text-indigo-500 font-bold">#{{ sale.order_id }}</td>
+                  <td class="py-6 pl-4 font-mono text-xs text-indigo-500 font-bold">#{{ sale.orderId }}</td>
                   <td class="py-6 text-sm font-medium text-gray-600">{{ sale.orderDate | date:'mediumDate' }}</td>
                   <td class="py-6 text-sm font-bold text-gray-900">{{ sale.customerName }}</td>
                   <td class="py-6">
-                    <div class="bg-gray-100 inline-block px-3 py-1 rounded-xl text-xs font-bold text-gray-700">
+                    <span [class]="getCategoryClass(sale.categoryName)" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                       {{ sale.categoryName }}
+                    </span>
+                  </td>
+                  <td class="py-6">
+                    <div class="inline-block text-xs font-bold text-gray-600">
                        {{ sale.product_name }}
                     </div>
                   </td>
@@ -155,6 +272,25 @@ export class SellerDashboardComponent implements OnInit {
 
   sales = signal<any[]>([]);
   summary = signal<any>({ totalSales: 0, platformFee: 0, readyForPayout: 0 });
+  
+  // New Analytics State
+  activeTab = signal<'overview' | 'category'>('overview');
+
+  // Compute Category Data dynamically for the graph
+  categoryData = computed(() => {
+    const groups: { [key: string]: number } = {};
+    this.sales().forEach(sale => {
+      const cat = sale.categoryName || 'Uncategorized';
+      groups[cat] = (groups[cat] || 0) + parseFloat(sale.subtotal);
+    });
+    
+    // Convert to array for template iteration
+    return Object.keys(groups).map(name => ({
+      name,
+      value: groups[name],
+      percentage: (groups[name] / (this.summary().totalSales || 1)) * 100
+    })).sort((a, b) => b.value - a.value);
+  });
 
   constructor(
     private http: HttpClient,
@@ -175,7 +311,9 @@ export class SellerDashboardComponent implements OnInit {
   loadSales() {
     const user = this.userService.loggedInUserInfo();
     if (user && user.id !== undefined) {
-      this.sellerService.getOrders(user.id).subscribe({
+      // If admin, show everything!
+      const sellerId = user.role === 'admin' ? 'all' : user.id;
+      this.sellerService.getOrders(sellerId).subscribe({
         next: (data) => {
           this.sales.set(data.orders);
           this.summary.set(data.summary);
@@ -200,5 +338,13 @@ export class SellerDashboardComponent implements OnInit {
         alert('Could not start onboarding. Please try again later.');
       }
     });
+  }
+
+  getCategoryClass(category: string): string {
+    const cat = (category || '').toLowerCase();
+    if (cat.includes('elect')) return 'bg-blue-50 text-blue-600 border border-blue-100';
+    if (cat.includes('cloth') || cat.includes('fashion')) return 'bg-amber-50 text-amber-600 border border-amber-100';
+    if (cat.includes('home') || cat.includes('kitchen')) return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
+    return 'bg-gray-50 text-gray-400 border border-gray-100';
   }
 }

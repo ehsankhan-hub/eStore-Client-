@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SellerService } from '../../../services/seller.service';
+import { UserService } from '../../home/services/user/user.service';
 
 @Component({
   selector: 'app-seller-offers',
@@ -126,7 +127,7 @@ import { SellerService } from '../../../services/seller.service';
 export class OffersComponent implements OnInit {
   myProducts: any[] = [];
   activeOffers: any[] = [];
-  
+
   newOffer = {
     productId: '',
     offer_name: '',
@@ -134,16 +135,20 @@ export class OffersComponent implements OnInit {
     expires_at: ''
   };
 
-  constructor(private sellerService: SellerService) {}
+  constructor(
+    private sellerService: SellerService,
+    private userService: UserService
+  ) { }
 
   ngOnInit() {
     this.loadData();
   }
 
   loadData() {
-    // Assuming seller ID 1 for now
-    this.sellerService.getProducts(1).subscribe(data => this.myProducts = data);
-    this.sellerService.getOffers(1).subscribe(data => this.activeOffers = data);
+    const user = this.userService.loggedInUserInfo();
+    const sellerId = user?.id || 1;
+    this.sellerService.getProducts(sellerId).subscribe(data => this.myProducts = data);
+    this.sellerService.getOffers(sellerId).subscribe(data => this.activeOffers = data);
   }
 
   calculateOfferPrice(original: any, discount: number): number {

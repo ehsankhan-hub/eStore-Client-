@@ -6,6 +6,7 @@ import { SellerService } from '../../../../services/seller.service';
 import { ToastService } from '../../../../services/toast.service';
 import { CategoriesStoreItem } from '../../../home/services/category/categories.storeItem';
 import { CategoryService } from '../../../home/services/category/category.service';
+import { UserService } from '../../../home/services/user/user.service';
 
 @Component({
   selector: 'app-product-list',
@@ -283,6 +284,7 @@ export class ProductListComponent implements OnInit {
   private toast = inject(ToastService);
   private sellerService = inject(SellerService);
   public categoryStore = inject(CategoriesStoreItem);
+  private userService = inject(UserService);
 
   // Modal State
   isEditModalOpen = false;
@@ -297,7 +299,9 @@ export class ProductListComponent implements OnInit {
 
   fetchProducts() {
     this.loading = true;
-    this.sellerService.getProducts(1).subscribe({
+    const user = this.userService.loggedInUserInfo();
+    const sellerId = user?.id || 1;
+    this.sellerService.getProducts(sellerId).subscribe({
       next: (data) => {
         this.products = data;
         this.loading = false;

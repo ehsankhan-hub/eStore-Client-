@@ -6,6 +6,7 @@ import { SellerService } from '../../../../services/seller.service';
 import { ToastService } from '../../../../services/toast.service';
 import { CategoriesStoreItem } from '../../../home/services/category/categories.storeItem';
 import { CategoryService } from '../../../home/services/category/category.service';
+import { UserService } from '../../../home/services/user/user.service';
 
 @Component({
   selector: 'app-add-product',
@@ -132,7 +133,7 @@ export class AddProductComponent {
   category = '';
   description = '';
   price: number | null = null;
-  
+
   commissionRate = 0.10; // 10% eStore fee
   commissionFee = 0;
   sellerEarnings = 0;
@@ -146,10 +147,11 @@ export class AddProductComponent {
   private toast = inject(ToastService);
 
   constructor(
-    private router: Router, 
+    private router: Router,
     private sellerService: SellerService,
+    private userService: UserService,
     public categoryStore: CategoriesStoreItem
-  ) {}
+  ) { }
 
   calculateSplit() {
     if (this.price && this.price > 0) {
@@ -173,7 +175,12 @@ export class AddProductComponent {
     formData.append('category_id', this.category);
     formData.append('description', this.description || '');
     if (this.price) formData.append('price', String(this.price));
-    formData.append('seller_id', '1');
+    const user = this.userService.loggedInUserInfo();
+    if (user && user.id) {
+      formData.append('seller_id', String(user.id));
+    } else {
+      formData.append('seller_id', '1'); // Fallback to 1 if not logged in
+    }
 
     // Include Offer Data if provided
     if (this.discount_pct) formData.append('discount_pct', String(this.discount_pct));
