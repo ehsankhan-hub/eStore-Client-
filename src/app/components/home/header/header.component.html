@@ -2,12 +2,12 @@
   <!-- Top Row: Nav Belt -->
   <div class="bg-amazon-dark nav-belt flex items-center px-4 py-1 gap-2 md:gap-4 scroll-smooth">
     <!-- Logo -->
-    <div class="flex items-center min-w-[100px] hover:border hover:border-white p-1 rounded cursor-pointer transition-all">
-      <a routerLink="/home/products" class="text-white flex flex-col items-center">
+    <div class="flex items-center min-w-[100px] hover:border hover:border-slate-400 p-1 rounded cursor-pointer transition-all">
+      <a routerLink="/home/products" class="text-slate-900 flex flex-col items-center">
         <span class="text-2xl font-black tracking-tight leading-none italic">
-          eStore<span class="text-amazon-orange">.sa</span>
+          eStore<span class="text-amber-600">.sa</span>
         </span>
-        <div class="w-full h-[3px] bg-amazon-orange rounded-full -mt-1 scale-x-90 translate-y-1"></div>
+        <div class="w-full h-[3px] bg-amber-600 rounded-full -mt-1 scale-x-90 translate-y-1"></div>
       </a>
     </div>
 
@@ -22,7 +22,6 @@
 
     <!-- Search Bar -->
     <div class="flex-grow flex items-center h-full py-1">
-      @if(displaySearch()){
       <div class="amazon-search w-full bg-white group">
         <select
           #categoryOptions
@@ -47,7 +46,6 @@
           <fa-icon [icon]="faSearch" class="text-gray-900 text-xl"></fa-icon>
         </button>
       </div>
-      }
     </div>
 
     <!-- Right Actions -->

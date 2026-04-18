@@ -48,7 +48,7 @@ import { ProfileDetailsComponent } from '../profile-details/profile-details.comp
 })
 export class HeaderComponent implements AfterViewInit {
   @ViewChild('profileDetails') profileDetails!: ProfileDetailsComponent;
-  
+
   faSearch = faSearch;
   faUserCircle = faUserCircle;
   faShoppingCart = faShoppingCart;

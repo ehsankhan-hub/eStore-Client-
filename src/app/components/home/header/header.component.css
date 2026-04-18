@@ -6,20 +6,21 @@
 }
 
 /* Amazon Colors */
+/* Gold Theme Colors */
 .bg-amazon-dark {
-  background-color: #131921;
+  background-color: #D4B45A; /* Gold/Yellow from screenshot */
 }
 
 .bg-amazon-belt {
-  background-color: #232f3e;
+  background-color: #c4a44a; /* Slightly darker gold for the lower belt */
 }
 
 .bg-amazon-orange {
-  background-color: #febd69;
+  background-color: #333333; /* Dark search button for contrast */
 }
 
 .bg-amazon-orange-hover {
-  background-color: #f3a847;
+  background-color: #000000;
 }
 
 /* Layout Utilities */
@@ -31,6 +32,26 @@
 .nav-main {
   min-height: 39px;
   max-height: 39px;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.nav-main::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.nav-link {
+  font-size: 14px;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.nav-link:hover {
+  border-color: #333333;
 }
 
 /* Search Bar Styling */
@@ -70,25 +91,7 @@
   transition: background-color 0.2s;
 }
 
-/* Cart Badge Styling - Amazon style (overlapping) */
-.cart-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.cart-count {
-  position: absolute;
-  top: -6px;
-  right: 14px;
-  background-color: transparent;
-  color: #f08804;
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 1;
-}
-
-/* Nav Box (Amazon hover effect) */
+/* Nav Box Styling */
 .nav-box {
   padding: 5px 8px;
   border: 1px solid transparent;
@@ -100,41 +103,43 @@
 }
 
 .nav-box:hover {
-  border-color: #ffffff;
+  border-color: #333333;
 }
 
 .nav-line-1 {
   font-size: 12px;
   line-height: 14px;
-  color: #cccccc;
+  color: #4a4a4a;
 }
 
 .nav-line-2 {
   font-size: 14px;
   line-height: 15px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1a1a1a;
 }
 
-/* Secondary Nav Styling - Hide scrollbar while keeping functionality */
-.nav-main {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+.cart-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.nav-main::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+.cart-count {
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  background-color: transparent;
+  color: #000000;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
 }
 
-.nav-link {
-  font-size: 14px;
-  padding: 8px 9px;
-  border: 1px solid transparent;
-  border-radius: 2px;
-  color: #ffffff;
-  white-space: nowrap;
+fa-icon, .fa-icon {
+  color: #333333 !important;
 }
 
-.nav-link:hover {
-  border-color: #ffffff;
+.search-btn fa-icon {
+  color: #ffffff !important;
 }

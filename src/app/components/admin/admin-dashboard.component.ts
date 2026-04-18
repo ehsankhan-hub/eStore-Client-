@@ -26,6 +26,18 @@ export class AdminDashboardComponent implements OnInit {
     pendingRevenue: 0
   };
 
+  get grossSales(): number {
+    return (Number(this.stats.revenue) || 0) + (Number(this.stats.pendingRevenue) || 0);
+  }
+
+  get serviceFees(): number {
+    return this.grossSales * 0.10; // Assuming 10% platform fee
+  }
+
+  get netEarnings(): number {
+    return this.grossSales * 0.90; // Assuming 90% goes to sellers/net
+  }
+
   homepageBlocks: any[] = [];
   systemSettings: any[] = [];
   selectedBlock: any = null;

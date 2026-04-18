@@ -20,36 +20,88 @@
   <!-- Main Content -->
   <main class="content">
     
-    <!-- Stats Section -->
-    <div *ngIf="activeTab === 'stats'" class="tab-content">
-      <h1 class="page-title">Platform Overview</h1>
-      <div class="stats-grid">
-        <div class="stat-card">
-            <h3>Total Buyers</h3>
-            <p class="stat-value">{{ stats.buyers }}</p>
-            <span class="stat-note">{{ stats.newUsers }} new this month</span>
+    <!-- Stats Section (Performance Dashboard) -->
+    <div *ngIf="activeTab === 'stats'" class="tab-content transition-fade">
+      <div class="dashboard-header-row">
+        <div class="header-left">
+          <h1 class="dashboard-main-title">Admin Dashboard</h1>
+          <p class="dashboard-subtitle">Welcome back! Here is the platform business at a glance.</p>
         </div>
-        <div class="stat-card">
-            <h3>Active Sellers</h3>
-            <p class="stat-value">{{ stats.sellers }}</p>
-            <span class="stat-note">Platform Partners</span>
+        <div class="stripe-alert-card">
+          <div class="stripe-alert-left">
+            <div class="warning-icon">⚠️</div>
+            <div class="alert-text">
+              <span class="alert-title">PAYOUTS DISABLED</span>
+              <span class="alert-desc">Connect Stripe to receive platform earnings.</span>
+            </div>
+          </div>
+          <button class="connect-stripe-btn">CONNECT STRIPE</button>
         </div>
-        <div class="stat-card">
-            <h3>System Admins</h3>
-            <p class="stat-value">{{ stats.admins }}</p>
-            <span class="stat-note">Authorized Access</span>
+      </div>
+
+      <div class="premium-stats-grid">
+        <!-- Gross Sales Card -->
+        <div class="premium-card">
+          <div class="card-bg-blob blob-blue"></div>
+          <span class="card-label">GROSS SALES</span>
+          <h2 class="card-large-value">{{ grossSales | currency:'USD' }}</h2>
+          <div class="card-footer">
+            <span class="badge-live">↑ Live</span>
+            <span class="footer-note">All time volume</span>
+          </div>
         </div>
-        <div class="stat-card">
-            <h3>Total Products</h3>
-            <p class="stat-value">{{ stats.products }}</p>
+
+        <!-- Service Fees Card -->
+        <div class="premium-card">
+          <div class="card-bg-blob blob-red"></div>
+          <span class="card-label">SERVICE FEES (10%)</span>
+          <h2 class="card-large-value text-pink-vibrant">{{ serviceFees | currency:'USD' }}</h2>
+          <div class="card-footer">
+            <span class="footer-note">Platform maintenance contribute</span>
+          </div>
         </div>
-        <div class="stat-card revenue">
-            <h3>Released Revenue</h3>
-            <p class="stat-value">{{ stats.revenue | currency:'USD' }}</p>
+
+        <!-- Net Earnings Card -->
+        <div class="premium-card bordered-success">
+          <div class="card-bg-blob blob-green"></div>
+          <span class="card-label label-success">NET EARNINGS</span>
+          <h2 class="card-large-value text-green-vibrant">{{ netEarnings | currency:'USD' }}</h2>
+          <div class="card-footer">
+            <span class="badge-withdrawal">💰 Ready for Withdrawal</span>
+          </div>
         </div>
-        <div class="stat-card pending">
-            <h3>Pending Revenue</h3>
-            <p class="stat-value text-orange-500">{{ stats.pendingRevenue | currency:'USD' }}</p>
+      </div>
+
+      <!-- Secondary Stats (Now matching the premium style) -->
+      <div class="premium-stats-grid">
+        <!-- Total Buyers -->
+        <div class="premium-card">
+          <div class="card-bg-blob blob-blue"></div>
+          <span class="card-label">TOTAL BUYERS</span>
+          <h2 class="card-large-value">{{ stats.buyers }}</h2>
+          <div class="card-footer">
+            <span class="badge-live">Registered Users</span>
+          </div>
+        </div>
+
+        <!-- Active Sellers -->
+        <div class="premium-card">
+          <div class="card-bg-blob blob-red"></div>
+          <span class="card-label">ACTIVE SELLERS</span>
+          <h2 class="card-large-value text-pink-vibrant">{{ stats.sellers }}</h2>
+          <div class="card-footer">
+            <span class="footer-note">Verified Platform Partners</span>
+          </div>
+        </div>
+
+        <!-- Total Products -->
+        <div class="premium-card">
+          <div class="card-bg-blob blob-green"></div>
+          <span class="card-label label-success">TOTAL PRODUCTS</span>
+          <h2 class="card-large-value text-green-vibrant">{{ stats.products }}</h2>
+          <div class="card-footer">
+            <span class="footer-note">Live in catalog</span>
+          </div>
         </div>
       </div>
     </div>

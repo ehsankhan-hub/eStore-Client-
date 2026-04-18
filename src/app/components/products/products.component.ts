@@ -44,8 +44,9 @@ export class ProductsComponent {
   ngOnInit(): void { }
 
   getImageUrl(imageName: any | undefined): string {
+    // 0. Handle Invalid/Null names
     if (!imageName || imageName === 'undefined' || imageName === 'null') {
-      return `${this.imageBasePath}shop-1.jpg`;
+      return 'assets/images/cat-fashion.jpg'; // Verified local asset
     }
 
     // 1. Absolute URLs (external images)
@@ -53,26 +54,29 @@ export class ProductsComponent {
       return imageName;
     }
 
-    // 2. Local Assets (starting with assets/ or shop-)
-    if (imageName.startsWith('assets/') || imageName.startsWith('shop-')) {
-      // Ensure paths like assets/images/ are properly formed
-      if (imageName.startsWith('assets/') && !imageName.includes('images/')) {
-        // Fix if needed, but usually shop-* are in assets/images/
-      }
+    // 2. Local Assets Check (Legacy or Default assets)
+    const isLocalAsset = imageName.startsWith('shop-') || 
+                        imageName.startsWith('cat-') || 
+                        imageName.startsWith('hero-') || 
+                        imageName.startsWith('assets/');
+
+    if (isLocalAsset) {
       return imageName.startsWith('assets/') ? imageName : `${this.imageBasePath}${imageName}`;
     }
 
-    // 3. Backend Uploads (Seller uploaded images)
-    // Most seller uploads are UUIDs or timestamps with dashes and extensions
-    // If it doesn't look like a static asset, it's likely a backend upload
-    return window.location.hostname === 'localhost' ? `http://localhost:5004/api/uploads/${imageName}` : `https://short-coats-dig.loca.lt/api/uploads/${imageName}`;
+    // 3. Seller Uploads (PRIORITY)
+    // If it's not a known local asset, it must be a seller upload from the server
+    const serverBase = window.location.hostname === 'localhost' 
+      ? 'http://localhost:5004/api/uploads/' 
+      : 'https://short-coats-dig.loca.lt/api/uploads/';
+    
+    return `${serverBase}${imageName}`;
   }
 
   getCurrentImage(product: Product): string {
     const idx = product.currentImageIndex || 0;
     if (product.galleryImages && product.galleryImages[idx]) {
       const img = product.galleryImages[idx];
-      // Backend returns string array, but some components might expect object with .src
       const imageName = typeof img === 'string' ? img : img.src;
       return this.getImageUrl(imageName);
     }
@@ -89,8 +93,14 @@ export class ProductsComponent {
 
   onImageError(event: Event, product: Product, imageIndex: number) {
     const imgElement = event.target as HTMLImageElement;
-    imgElement.onerror = null; // Prevent infinite loop if fallback fails
-    imgElement.src = 'assets/images/shop-1.jpg'; // Use existing shop image as placeholder
+    
+    // Prevent infinite loop by disabling further error handling on this element
+    imgElement.onerror = null; 
+    
+    console.warn('Image failed to load. Attempting fallback to static assets.');
+    
+    // Fallback order: Try local fashion category image, then a generic placeholder
+    imgElement.src = 'assets/images/cat-fashion.jpg';
   }
 
   trackByProductId(index: number, product: Product): number {

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../home/services/user/user.service';
 import { SellerService } from '../../../services/seller.service';
@@ -7,7 +8,7 @@ import { SellerService } from '../../../services/seller.service';
 @Component({
   selector: 'app-seller-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="dashboard-container max-w-6xl mx-auto p-6 md:p-8">
       <!-- Header Section -->
@@ -193,55 +194,88 @@ import { SellerService } from '../../../services/seller.service';
       
       <!-- Recent Sales Table -->
       <div class="bg-white p-10 rounded-[3rem] shadow-sm border border-gray-100">
-        <div class="flex justify-between items-center mb-10">
-          <h3 class="text-2xl font-black text-gray-900 flex items-center gap-4">
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
+          <div class="flex items-center gap-4">
              <span class="w-2 h-8 bg-indigo-500 rounded-full"></span>
-             Transaction History
-          </h3>
-          <button (click)="loadSales()" class="text-gray-400 hover:text-indigo-600 transition-colors">
+             <h3 class="text-2xl font-black text-gray-900">Transaction History</h3>
+          </div>
+
+          <!-- Active Search Field -->
+          <div class="relative w-full lg:w-96 group">
+            <div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+               </svg>
+            </div>
+            <input type="text" 
+                   [ngModel]="searchTerm()"
+                   (ngModelChange)="searchTerm.set($event)"
+                   placeholder="Search ID, Product, or Category..." 
+                   class="w-full bg-gray-50 border-2 border-transparent focus:border-indigo-100 focus:bg-white rounded-2xl py-3 pl-14 pr-6 text-sm font-bold text-gray-900 outline-none transition-all shadow-inner placeholder:text-gray-300">
+            <div *ngIf="searchTerm()" (click)="searchTerm.set('')" class="absolute inset-y-0 right-5 flex items-center cursor-pointer text-gray-300 hover:text-rose-500 transition-colors">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+               </svg>
+            </div>
+          </div>
+
+          <button (click)="loadSales()" class="text-gray-400 hover:text-indigo-600 transition-colors hidden lg:block">
              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
              </svg>
           </button>
         </div>
 
-        <!-- Order Table -->
-        <div class="overflow-hidden" *ngIf="sales().length > 0; else emptyState">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="text-gray-400 text-[10px] uppercase font-black tracking-widest border-b border-gray-50">
-                  <th class="pb-6 pl-4">Order ID</th>
-                  <th class="pb-6">Date</th>
-                  <th class="pb-6">Customer</th>
-                  <th class="pb-6">Category</th>
-                  <th class="pb-6">Product</th>
-                  <th class="pb-6">Qty</th>
-                  <th class="pb-6 text-right pr-4">Earnings</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-50">
-                <tr *ngFor="let sale of sales()" class="group hover:bg-gray-50/50 transition-all">
-                  <td class="py-6 pl-4 font-mono text-xs text-indigo-500 font-bold">#{{ sale.orderId }}</td>
-                  <td class="py-6 text-sm font-medium text-gray-600">{{ sale.orderDate | date:'mediumDate' }}</td>
-                  <td class="py-6 text-sm font-bold text-gray-900">{{ sale.customerName }}</td>
-                  <td class="py-6">
-                    <span [class]="getCategoryClass(sale.categoryName)" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                       {{ sale.categoryName }}
-                    </span>
-                  </td>
-                  <td class="py-6">
-                    <div class="inline-block text-xs font-bold text-gray-600">
-                       {{ sale.product_name }}
-                    </div>
-                  </td>
-                  <td class="py-6 text-sm font-black text-gray-400">x{{ sale.quantity }}</td>
-                  <td class="py-6 text-right pr-4">
-                    <p class="text-sm font-black text-emerald-600">+{{ sale.subtotal | currency }}</p>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Order Table: Grouped by Category Accordion -->
+        <div class="space-y-6" *ngIf="groupedSales().length > 0; else emptyState">
+          <div *ngFor="let group of groupedSales()" class="bg-gray-50/50 rounded-[2rem] overflow-hidden border border-gray-100 transition-all">
+            <!-- Category Header Row -->
+            <div (click)="toggleCategory(group.name)" 
+                 class="p-6 flex justify-between items-center cursor-pointer hover:bg-gray-100/50 transition-colors group/header">
+              <div class="flex items-center gap-6">
+                <!-- Status Icon -->
+                <div class="w-10 h-10 rounded-2xl flex items-center justify-center transition-all shadow-sm"
+                     [class]="isExpanded(group.name) ? 'bg-indigo-600 text-white rotate-45' : 'bg-white text-indigo-600'">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div>
+                   <h4 class="text-lg font-black text-gray-900 uppercase tracking-tight">{{ group.name }}</h4>
+                   <p class="text-xs text-gray-400 font-bold">{{ group.orders.length }} Transactions</p>
+                </div>
+              </div>
+              <div class="text-right">
+                 <p class="text-xl font-black text-indigo-600">{{ group.totalEarnings | currency }}</p>
+                 <p class="text-[10px] text-gray-400 font-black uppercase tracking-widest">Category Total</p>
+              </div>
+            </div>
+
+            <!-- Expanded Content -->
+            <div *ngIf="isExpanded(group.name)" class="px-6 pb-6 animate-slide-down">
+               <div class="bg-white rounded-[1.5rem] border border-gray-100 overflow-hidden shadow-sm">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="text-gray-400 text-[9px] uppercase font-black tracking-widest border-b border-gray-50">
+                        <th class="py-4 pl-6">ID</th>
+                        <th class="py-4 text-center">Date</th>
+                        <th class="py-4">Product</th>
+                        <th class="py-4 text-center">Qty</th>
+                        <th class="py-4 text-right pr-6">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                      <tr *ngFor="let sale of group.orders" class="hover:bg-gray-50 transition-colors">
+                        <td class="py-5 pl-6 font-mono text-xs text-indigo-400 font-bold">#{{ sale.orderId }}</td>
+                        <td class="py-5 text-center text-xs font-bold text-gray-500">{{ sale.orderDate | date:'shortDate' }}</td>
+                        <td class="py-5 text-xs font-black text-gray-800">{{ sale.product_name }}</td>
+                        <td class="py-5 text-center text-xs font-black text-gray-300">x{{ sale.quantity }}</td>
+                        <td class="py-5 text-right pr-6 font-black text-emerald-600">+{{ sale.subtotal | currency }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+               </div>
+            </div>
           </div>
         </div>
 
@@ -263,6 +297,20 @@ import { SellerService } from '../../../services/seller.service';
   styles: [`
     :host { display: block; background: #fcfcfd; min-height: 100vh; }
     .animate-spin { display: inline-block; vertical-align: middle; }
+    .animate-slide-down {
+      animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   `]
 })
 export class SellerDashboardComponent implements OnInit {
@@ -275,20 +323,39 @@ export class SellerDashboardComponent implements OnInit {
   
   // New Analytics State
   activeTab = signal<'overview' | 'category'>('overview');
+  expandedCategories = signal<Set<string>>(new Set());
+  searchTerm = signal<string>('');
+
+  // Grouped and Filtered Sales 
+  groupedSales = computed(() => {
+    const term = this.searchTerm().toLowerCase();
+    const filtered = this.sales().filter(s => 
+      s.product_name.toLowerCase().includes(term) ||
+      String(s.orderId).includes(term) ||
+      (s.categoryName || '').toLowerCase().includes(term) ||
+      (s.customerName || '').toLowerCase().includes(term)
+    );
+
+    const groups: { [key: string]: any[] } = {};
+    filtered.forEach(sale => {
+      const cat = sale.categoryName || 'General';
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(sale);
+    });
+    
+    return Object.keys(groups).map(name => ({
+      name,
+      orders: groups[name],
+      totalEarnings: groups[name].reduce((acc, curr) => acc + parseFloat(curr.subtotal), 0)
+    }));
+  });
 
   // Compute Category Data dynamically for the graph
   categoryData = computed(() => {
-    const groups: { [key: string]: number } = {};
-    this.sales().forEach(sale => {
-      const cat = sale.categoryName || 'Uncategorized';
-      groups[cat] = (groups[cat] || 0) + parseFloat(sale.subtotal);
-    });
-    
-    // Convert to array for template iteration
-    return Object.keys(groups).map(name => ({
-      name,
-      value: groups[name],
-      percentage: (groups[name] / (this.summary().totalSales || 1)) * 100
+    return this.groupedSales().map(g => ({
+      name: g.name,
+      value: g.totalEarnings,
+      percentage: (g.totalEarnings / (this.summary().totalSales || 1)) * 100
     })).sort((a, b) => b.value - a.value);
   });
 
@@ -310,13 +377,15 @@ export class SellerDashboardComponent implements OnInit {
 
   loadSales() {
     const user = this.userService.loggedInUserInfo();
+    
     if (user && user.id !== undefined) {
-      // If admin, show everything!
-      const sellerId = user.role === 'admin' ? 'all' : user.id;
+      // If admin, show everything! (Case-insensitive check)
+      const role = (user.role || '').toLowerCase();
+      const sellerId = role === 'admin' ? 'all' : user.id;
       this.sellerService.getOrders(sellerId).subscribe({
         next: (data) => {
-          this.sales.set(data.orders);
-          this.summary.set(data.summary);
+          this.sales.set(data.orders || []);
+          this.summary.set(data.summary || { totalSales: 0, platformFee: 0, readyForPayout: 0 });
         },
         error: (err) => console.error('Failed to load sales', err)
       });
@@ -346,5 +415,16 @@ export class SellerDashboardComponent implements OnInit {
     if (cat.includes('cloth') || cat.includes('fashion')) return 'bg-amber-50 text-amber-600 border border-amber-100';
     if (cat.includes('home') || cat.includes('kitchen')) return 'bg-emerald-50 text-emerald-600 border border-emerald-100';
     return 'bg-gray-50 text-gray-400 border border-gray-100';
+  }
+
+  toggleCategory(category: string) {
+    const expanded = new Set(this.expandedCategories());
+    if (expanded.has(category)) expanded.delete(category);
+    else expanded.add(category);
+    this.expandedCategories.set(expanded);
+  }
+
+  isExpanded(category: string): boolean {
+    return this.expandedCategories().has(category);
   }
 }

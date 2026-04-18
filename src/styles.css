@@ -5,3 +5,5 @@
 .link-hover {
   @apply text-gray-700 font-medium relative inline-block after:block after:h-[2px] after:bg-blue-500 after:origin-left after:scale-x-0 hover:after:scale-x-100 after:transition-transform after:duration-300;
 }
+
+
