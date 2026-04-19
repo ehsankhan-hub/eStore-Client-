@@ -164,6 +164,10 @@ export class SellerRegisterComponent {
       email: this.email?.trim(),
       password: this.password,
       role: 'seller',
+      storeName: this.storeName?.trim(),
+      bankName: this.bankName?.trim(),
+      accountNumber: this.accountNumber?.trim(),
+      routingNumber: this.routingNumber?.trim(),
     };
 
     this.isSubmitting = true;

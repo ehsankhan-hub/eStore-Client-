@@ -10,6 +10,11 @@ export interface User {
   role?: 'buyer' | 'seller' | 'admin' | 'user';
   stripe_account_id?: string;
   is_stripe_connected?: boolean;
+  /** Seller signup: persisted server-side with payout_verification_status pending until Stripe/admin */
+  storeName?: string;
+  bankName?: string;
+  accountNumber?: string;
+  routingNumber?: string;
 }
 
 export interface UserLogin {
@@ -29,6 +34,8 @@ export interface LoggedInUser {
   role?: string;
   stripe_account_id?: string;
   is_stripe_connected?: boolean;
+  sellerStoreName?: string | null;
+  payoutVerificationStatus?: string | null;
 }
 
 export interface LoginToken {

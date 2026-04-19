@@ -5,6 +5,17 @@ import { loadStripe, Stripe, StripeCardElement, StripeElements } from '@stripe/s
 import { UserService } from '../user/user.service';
 import { API_BASE_URL } from '../../../../api-url';
 
+/** Response from POST /payments/sync-payout-verification */
+export interface SyncPayoutVerificationResponse {
+  mock?: boolean;
+  updated?: boolean;
+  message?: string;
+  isStripeConnected?: boolean;
+  payoutVerificationStatus?: string | null;
+  detailsSubmitted?: boolean;
+  chargesEnabled?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -45,6 +56,20 @@ export class PaymentService {
   }
 
   // 3. Confirm Payment
+  /** After Stripe Connect return URL — refreshes is_stripe_connected / payout verification. */
+  syncPayoutVerification(): Observable<SyncPayoutVerificationResponse> {
+    const url = `${API_BASE_URL}/payments/sync-payout-verification`;
+    const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
+    return this.http.post<SyncPayoutVerificationResponse>(url, {}, { headers });
+  }
+
+  /** Masked seller payout summary (no full account numbers). */
+  getPayoutProfile(): Observable<Record<string, unknown>> {
+    const url = `${API_BASE_URL}/payments/payout-profile`;
+    const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
+    return this.http.get<Record<string, unknown>>(url, { headers });
+  }
+
   confirmCardPayment(clientSecret: string, cardElement: StripeCardElement): Observable<any> {
     // MOCK FLOW: If secret is from our mock mode, simulate immediate success
     if (clientSecret.startsWith('pi_mock_')) {

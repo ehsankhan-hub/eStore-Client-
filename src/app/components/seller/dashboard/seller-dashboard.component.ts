@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { UserService } from '../../home/services/user/user.service';
 import { SellerService } from '../../../services/seller.service';
+import { PaymentService } from '../../home/services/payment/payment.service';
 import { API_BASE_URL } from '../../../api-url';
 
 @Component({
@@ -363,7 +364,8 @@ export class SellerDashboardComponent implements OnInit {
   constructor(
     private http: HttpClient,
     private userService: UserService,
-    private sellerService: SellerService
+    private sellerService: SellerService,
+    private paymentService: PaymentService
   ) { }
 
   ngOnInit(): void {
@@ -373,6 +375,19 @@ export class SellerDashboardComponent implements OnInit {
       if (user.is_stripe_connected) this.isStripeConnected.set(true);
       this.sellerName = user.email;
       this.loadSales();
+      this.paymentService.syncPayoutVerification().subscribe({
+        next: (r) => {
+          if (r.mock) return;
+          if (typeof r.isStripeConnected === 'boolean') {
+            this.isStripeConnected.set(r.isStripeConnected);
+            localStorage.setItem('isStripeConnected', String(r.isStripeConnected));
+          }
+          if (r.payoutVerificationStatus != null) {
+            localStorage.setItem('payoutVerificationStatus', r.payoutVerificationStatus);
+          }
+        },
+        error: () => { /* offline or Stripe not configured */ },
+      });
     }
   }
 

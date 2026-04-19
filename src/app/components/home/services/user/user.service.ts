@@ -53,6 +53,21 @@ export class UserService {
     localStorage.setItem('email', token.user.email); //new
     localStorage.setItem('role', token.user.role || 'buyer'); //new
     localStorage.setItem('userId', String(token.user.id || 0)); //new
+    if (token.user.sellerStoreName != null) {
+      localStorage.setItem('sellerStoreName', token.user.sellerStoreName);
+    } else {
+      localStorage.removeItem('sellerStoreName');
+    }
+    if (token.user.payoutVerificationStatus != null) {
+      localStorage.setItem('payoutVerificationStatus', token.user.payoutVerificationStatus);
+    } else {
+      localStorage.removeItem('payoutVerificationStatus');
+    }
+    if (token.user.is_stripe_connected != null) {
+      localStorage.setItem('isStripeConnected', String(!!token.user.is_stripe_connected));
+    } else {
+      localStorage.removeItem('isStripeConnected');
+    }
     console.log('Login: Saved userId to localStorage:', token.user.id); // DEBUG
 
     this._isAuthenticated.set(true);
@@ -98,6 +113,9 @@ export class UserService {
         email: localStorage.getItem('email') || '', //new
         role: localStorage.getItem('role') || 'buyer', //new
         id: parseInt(localStorage.getItem('userId') || '0'), //new
+        sellerStoreName: localStorage.getItem('sellerStoreName'),
+        payoutVerificationStatus: localStorage.getItem('payoutVerificationStatus'),
+        is_stripe_connected: localStorage.getItem('isStripeConnected') === 'true',
       };
 
       this._isAuthenticated.set(true);
