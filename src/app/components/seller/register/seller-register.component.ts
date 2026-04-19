@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { UserService } from '../../home/services/user/user.service';
+import { User } from '../../home/types/user.type';
 
 @Component({
   selector: 'app-seller-register',
@@ -10,16 +12,73 @@ import { Router } from '@angular/router';
   template: `
     <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg mt-10 border border-gray-100">
       <h2 class="text-3xl font-extrabold text-gray-900 mb-6 text-center">Become an eStore Seller</h2>
+      <div *ngIf="alertMessage"
+           class="mb-4 rounded-md px-4 py-3 text-sm"
+           [class.bg-green-50]="alertType === 'success'"
+           [class.text-green-700]="alertType === 'success'"
+           [class.bg-amber-50]="alertType === 'warning'"
+           [class.text-amber-700]="alertType === 'warning'"
+           [class.bg-rose-50]="alertType === 'error'"
+           [class.text-rose-700]="alertType === 'error'">
+        {{ alertMessage }}
+      </div>
       
       <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="space-y-6">
+
+        <!-- Step 0: Account Details -->
+        <div class="border-b pb-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-4">0. Account Details</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">First Name</label>
+              <input type="text" [(ngModel)]="firstName" name="firstName" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Last Name</label>
+              <input type="text" [(ngModel)]="lastName" name="lastName"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" [(ngModel)]="email" name="email" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Password</label>
+              <input type="password" [(ngModel)]="password" name="password" required minlength="6"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+          </div>
+        </div>
         
         <!-- Step 1: Store Details -->
         <div class="border-b pb-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">1. Store Details</h3>
-          <div class="grid grid-cols-1 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">Store Name</label>
               <input type="text" [(ngModel)]="storeName" name="storeName" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Address</label>
+              <input type="text" [(ngModel)]="address" name="address" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">City</label>
+              <input type="text" [(ngModel)]="city" name="city" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">State</label>
+              <input type="text" [(ngModel)]="state" name="state" required
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">PIN / ZIP</label>
+              <input type="text" [(ngModel)]="pin" name="pin" required
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
           </div>
@@ -64,26 +123,67 @@ import { Router } from '@angular/router';
           </div>
         </div>
 
-        <button type="submit" [disabled]="!registerForm.form.valid || !acceptedTerms"
+        <button type="submit" [disabled]="!registerForm.form.valid || !acceptedTerms || isSubmitting"
           class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-          Register My Store
+          {{ isSubmitting ? 'Registering...' : 'Register My Store' }}
         </button>
       </form>
     </div>
   `
 })
 export class SellerRegisterComponent {
+  firstName = '';
+  lastName = '';
+  email = '';
+  password = '';
+  address = '';
+  city = '';
+  state = '';
+  pin = '';
   storeName = '';
   bankName = '';
   accountNumber = '';
   routingNumber = '';
   acceptedTerms = false;
+  isSubmitting = false;
+  alertMessage = '';
+  alertType: 'success' | 'warning' | 'error' = 'warning';
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private userService: UserService) {}
 
   onSubmit() {
-    // Implement API call to register seller in Firebase/backend
-    alert('Store successfully registered! Welcome to eStore.');
-    this.router.navigate(['/seller/dashboard']);
+    if (!this.acceptedTerms || this.isSubmitting) return;
+
+    const sellerPayload: User = {
+      firstName: this.firstName?.trim(),
+      lastName: this.lastName?.trim(),
+      address: this.address?.trim(),
+      city: this.city?.trim(),
+      state: this.state?.trim(),
+      pin: this.pin?.trim(),
+      email: this.email?.trim(),
+      password: this.password,
+      role: 'seller',
+    };
+
+    this.isSubmitting = true;
+    this.userService.createUser(sellerPayload).subscribe({
+      next: (result) => {
+        this.isSubmitting = false;
+        if (result?.message === 'Success') {
+          this.alertType = 'success';
+          this.alertMessage = 'Seller account created. Please login.';
+          setTimeout(() => this.router.navigate(['/home/login']), 800);
+          return;
+        }
+        this.alertType = 'warning';
+        this.alertMessage = result?.message || 'Unable to create seller account.';
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.alertType = 'error';
+        this.alertMessage = err?.error?.message || 'Seller registration failed.';
+      },
+    });
   }
 }

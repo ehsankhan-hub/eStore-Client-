@@ -51,7 +51,7 @@ export class UserService {
     localStorage.setItem('state', token.user.state);
     localStorage.setItem('pin', token.user.pin);
     localStorage.setItem('email', token.user.email); //new
-    localStorage.setItem('role', token.user.role || 'user'); //new
+    localStorage.setItem('role', token.user.role || 'buyer'); //new
     localStorage.setItem('userId', String(token.user.id || 0)); //new
     console.log('Login: Saved userId to localStorage:', token.user.id); // DEBUG
 
@@ -96,7 +96,7 @@ export class UserService {
         state: localStorage.getItem('state') || '',
         pin: localStorage.getItem('pin') || '',
         email: localStorage.getItem('email') || '', //new
-        role: localStorage.getItem('role') || 'user', //new
+        role: localStorage.getItem('role') || 'buyer', //new
         id: parseInt(localStorage.getItem('userId') || '0'), //new
       };
 

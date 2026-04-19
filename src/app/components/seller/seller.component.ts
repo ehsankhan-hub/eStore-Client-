@@ -39,6 +39,12 @@ import { CommonModule } from '@angular/common';
              <svg class="w-6 h-6 flex-shrink-0 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
              <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Dashboard</span>
           </a>
+
+          <a [routerLink]="['/seller', 'register']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
+             class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
+             <svg class="w-6 h-6 flex-shrink-0 group-hover:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7h3a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h3m6-3h-6a2 2 0 00-2 2v1h10V6a2 2 0 00-2-2zm-3 7v4m-2-2h4"/></svg>
+             <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Register as Seller</span>
+          </a>
           
           <a [routerLink]="['/seller', 'products']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
              class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">

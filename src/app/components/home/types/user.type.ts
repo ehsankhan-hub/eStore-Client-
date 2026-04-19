@@ -7,6 +7,7 @@ export interface User {
   pin: string;
   email: string;
   password: string;
+  role?: 'buyer' | 'seller' | 'admin' | 'user';
   stripe_account_id?: string;
   is_stripe_connected?: boolean;
 }

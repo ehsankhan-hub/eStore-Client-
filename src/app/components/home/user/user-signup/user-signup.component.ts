@@ -73,6 +73,7 @@ export class UserSignupComponent {
       pin,
       email,
       password,
+      role: 'buyer',
     };
     this.userSignupForm.disable();
 
