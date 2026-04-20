@@ -6,19 +6,41 @@ import {
   provideClientHydration,
   withEventReplay,
 } from '@angular/platform-browser';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import {
+  HttpInterceptorFn,
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+} from '@angular/common/http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideServiceWorker } from '@angular/service-worker';
+import { API_BASE_URL } from './api-url';
 
 // Firebase imports - only for development
 // import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 // import { getAuth, provideAuth } from '@angular/fire/auth';
 // import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 
+const ngrokBypassInterceptor: HttpInterceptorFn = (req, next) => {
+  const isApiCall = req.url.startsWith(API_BASE_URL);
+  const isNgrokEndpoint =
+    req.url.includes('ngrok-free.dev') || API_BASE_URL.includes('ngrok-free.dev');
+
+  if (isApiCall && isNgrokEndpoint) {
+    req = req.clone({
+      setHeaders: {
+        'ngrok-skip-browser-warning': 'true',
+      },
+    });
+  }
+
+  return next(req);
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([ngrokBypassInterceptor])),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideClientHydration(withEventReplay()),
