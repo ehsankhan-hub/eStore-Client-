@@ -17,6 +17,9 @@
             } @else if (error()) {
               <h2 class="text-2xl font-bold">Error</h2>
               <p class="text-blue-100">{{ error() }}</p>
+            } @else if (signInRequired()) {
+              <h2 class="text-2xl font-bold">Your account</h2>
+              <p class="text-blue-100">Sign in to view your profile and orders</p>
             } @else if (getPersonalInfo()) {
               <h2 class="text-2xl font-bold">{{ getPersonalInfo()?.name }}</h2>
               <p class="text-blue-100">Member since {{ formatDate(getPersonalInfo()?.memberSince || '') }}</p>
@@ -57,6 +60,21 @@
           <button (click)="retryLoading()" 
                   class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
             Retry
+          </button>
+        </div>
+      } @else if (signInRequired()) {
+        <div class="text-center py-12">
+          <fa-icon [icon]="faUser" class="text-4xl text-blue-500 mb-4"></fa-icon>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">You are not signed in</h3>
+          <p class="text-gray-600 mb-6 max-w-md mx-auto">
+            Sign in with your email and password or with Google, GitHub, or Facebook to load your profile.
+          </p>
+          <button
+            type="button"
+            (click)="goToLogin()"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            Go to sign in
           </button>
         </div>
       } @else if (getPersonalInfo()) {

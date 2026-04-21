@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from '../../../../api-url';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 export interface PersonalInfo {
   id: number;
@@ -48,7 +48,7 @@ export interface ProfileData {
 
 export interface ProfileResponse {
   success: boolean;
-  data: ProfileData;
+  data: ProfileData | null;
   message?: string;
 }
 
@@ -76,11 +76,12 @@ export class ProfileService {
     const userEmail = localStorage.getItem('email');
     
     if (!userEmail) {
-      this.error.set('User not authenticated');
       this.isLoading.set(false);
-      return new Observable(observer => {
-        observer.error('User not authenticated');
-        observer.complete();
+      this.error.set(null);
+      return of({
+        success: false,
+        data: null,
+        message: 'SIGN_IN_REQUIRED',
       });
     }
     

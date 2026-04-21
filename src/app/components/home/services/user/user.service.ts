@@ -37,6 +37,16 @@ export class UserService {
     return this.http.post(`${API_BASE_URL}/users/login`, { email: email, password: password });
   }
 
+  socialLogin(payload: {
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    provider: 'google' | 'github' | 'facebook';
+    providerUid: string;
+  }): Observable<any> {
+    return this.http.post(`${API_BASE_URL}/users/social-login`, payload);
+  }
+
   activateToken(token: LoginToken): void {
     // token.expiresInSeconds = 10;
     localStorage.setItem('token', token.token);

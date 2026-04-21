@@ -43,6 +43,8 @@ export class ProfileDetailsComponent implements OnInit, OnDestroy {
   isVisible = signal(false);
   isLoading = signal(true);
   error = signal<string | null>(null);
+  /** Logged-out user: show a friendly prompt instead of a red error. */
+  signInRequired = signal(false);
   
   private router = inject(Router);
   private userService = inject(UserService);
@@ -78,13 +80,19 @@ export class ProfileDetailsComponent implements OnInit, OnDestroy {
   loadProfileData() {
     this.isLoading.set(true);
     this.error.set(null);
-    
+    this.signInRequired.set(false);
+
     this.profileService.getProfile().subscribe({
       next: (response) => {
         this.isLoading.set(false);
+        if (response.message === 'SIGN_IN_REQUIRED') {
+          this.signInRequired.set(true);
+          this.profileData.set(null);
+          this.error.set(null);
+          return;
+        }
         if (response.success && response.data) {
           this.profileData.set(response.data);
-          console.log('Profile data loaded:', response.data);
         } else {
           this.error.set(response.message || 'Failed to load profile data');
         }
@@ -93,18 +101,14 @@ export class ProfileDetailsComponent implements OnInit, OnDestroy {
         this.isLoading.set(false);
         this.error.set('Failed to connect to server');
         console.error('Profile loading error:', err);
-      }
+      },
     });
   }
 
   show() {
     console.log('ProfileDetailsComponent.show() called');
     this.isVisible.set(true);
-    
-    // Refresh data when showing
-    if (!this.profileData()) {
-      this.loadProfileData();
-    }
+    this.loadProfileData();
     
     // Hide sidebar when profile is shown
     document.body.classList.add('profile-open');
@@ -159,6 +163,11 @@ export class ProfileDetailsComponent implements OnInit, OnDestroy {
   logout() {
     this.hide();
     this.userService.logout();
+  }
+
+  goToLogin() {
+    this.hide();
+    this.router.navigate(['/home/login']);
   }
 
   editProfile() {

@@ -1,6 +1,6 @@
-<div class="h-screen bg-gray-100 flex justify-center items-start px-4 pt-6">
+<div class="login-page h-screen flex justify-center items-start px-4 pt-6">
   <div
-    class="w-full max-w-xl bg-white rounded-xl shadow-md p-6 border border-gray-100 flex flex-col flex-grow max-h-[90vh] min-h-0"
+    class="login-card w-full max-w-2xl p-6 md:p-8 flex flex-col flex-grow max-h-[92vh] min-h-0"
   >
     <div class="text-center mb-6">
       <h2 class="text-3xl font-semibold text-gray-800">
@@ -52,10 +52,41 @@
       <div class="text-center pt-4">
         <button
           type="submit"
-          class="bg-indigo-600 hover:bg-indigo-700 text-white text-md px-8 py-2 rounded-md cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
+          class="primary-btn text-white text-md px-8 py-2 rounded-md cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed"
           [disabled]="!userLoginForm.valid"
         >
           Sign In
+        </button>
+      </div>
+
+      <div class="text-center text-sm text-gray-500 font-medium">or continue with</div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <button
+          type="button"
+          class="social-btn rounded-md px-3 py-2 text-sm cursor-pointer"
+          (click)="onSocialLogin('google')"
+          [disabled]="socialLoadingProvider !== null"
+        >
+          <span class="social-icon">G</span>
+          {{ socialLoadingProvider === 'google' ? 'Please wait...' : 'Google' }}
+        </button>
+        <button
+          type="button"
+          class="social-btn rounded-md px-3 py-2 text-sm cursor-pointer"
+          (click)="onSocialLogin('github')"
+          [disabled]="socialLoadingProvider !== null"
+        >
+          <span class="social-icon">GH</span>
+          {{ socialLoadingProvider === 'github' ? 'Please wait...' : 'GitHub' }}
+        </button>
+        <button
+          type="button"
+          class="social-btn rounded-md px-3 py-2 text-sm cursor-pointer"
+          (click)="onSocialLogin('facebook')"
+          [disabled]="socialLoadingProvider !== null"
+        >
+          <span class="social-icon">f</span>
+          {{ socialLoadingProvider === 'facebook' ? 'Please wait...' : 'Facebook' }}
         </button>
       </div>
 
