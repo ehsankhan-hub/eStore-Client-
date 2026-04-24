@@ -14,6 +14,7 @@ export interface SyncPayoutVerificationResponse {
   payoutVerificationStatus?: string | null;
   detailsSubmitted?: boolean;
   chargesEnabled?: boolean;
+  payoutsEnabled?: boolean;
 }
 
 @Injectable({
@@ -68,6 +69,13 @@ export class PaymentService {
     const url = `${API_BASE_URL}/payments/payout-profile`;
     const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
     return this.http.get<Record<string, unknown>>(url, { headers });
+  }
+
+  /** Start (or continue) Stripe Connect onboarding and return hosted link. */
+  startSellerOnboarding(): Observable<{ url: string }> {
+    const url = `${API_BASE_URL}/payments/onboard-seller`;
+    const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
+    return this.http.post<{ url: string }>(url, {}, { headers });
   }
 
   confirmCardPayment(clientSecret: string, cardElement: StripeCardElement): Observable<any> {

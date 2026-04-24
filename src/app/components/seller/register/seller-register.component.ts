@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,7 +25,7 @@ import { FirebaseService } from '../../../services/firebase.service';
         {{ alertMessage }}
       </div>
 
-      <div class="mb-6 border border-indigo-100 rounded-lg p-4 bg-indigo-50/60">
+      <div *ngIf="!isExistingSellerSession" class="mb-6 border border-indigo-100 rounded-lg p-4 bg-indigo-50/60">
         <h3 class="text-base font-semibold text-indigo-900 mb-3">Already a seller?</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <input
@@ -63,7 +63,7 @@ import { FirebaseService } from '../../../services/firebase.service';
           {{
             socialLoadingProvider === 'google'
               ? 'Please wait...'
-              : 'Continue with Google (Seller)'
+              : 'Continue with Google (Seller11)'
           }}
         </button>
       </div>
@@ -71,7 +71,7 @@ import { FirebaseService } from '../../../services/firebase.service';
       <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="space-y-6">
 
         <!-- Step 0: Account Details -->
-        <div class="border-b pb-6">
+        <div *ngIf="!isExistingSellerSession" class="border-b pb-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">0. Account Details</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -170,13 +170,13 @@ import { FirebaseService } from '../../../services/firebase.service';
 
         <button type="submit" [disabled]="!registerForm.form.valid || !acceptedTerms || isSubmitting"
           class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50">
-          {{ isSubmitting ? 'Registering...' : 'Register My Store' }}
+          {{ isSubmitting ? 'Registering...' : (isExistingSellerSession ? 'Complete Seller Onboarding' : 'Register My Store') }}
         </button>
       </form>
     </div>
   `
 })
-export class SellerRegisterComponent {
+export class SellerRegisterComponent implements OnInit {
   firstName = '';
   lastName = '';
   email = '';
@@ -197,12 +197,30 @@ export class SellerRegisterComponent {
   sellerLoginPassword = '';
   alertMessage = '';
   alertType: 'success' | 'warning' | 'error' = 'warning';
+  isExistingSellerSession = false;
 
   constructor(
     private router: Router,
     private userService: UserService,
     private firebaseService: FirebaseService
   ) {}
+
+  ngOnInit(): void {
+    const currentUser = this.userService.loggedInUserInfo();
+    const isAuthenticated = this.userService.isAuthenticated();
+    const role = String(currentUser?.role || '').toLowerCase();
+
+    this.isExistingSellerSession =
+      !!isAuthenticated && role === 'seller' && !!currentUser?.email;
+
+    if (this.isExistingSellerSession) {
+      this.firstName = currentUser.firstName || '';
+      this.lastName = currentUser.lastName || '';
+      this.email = currentUser.email || '';
+      // Existing social seller already has an identity; onboarding shouldn't ask password again.
+      this.password = 'SOCIAL_AUTH';
+    }
+  }
 
   onSellerLogin() {
     const email = this.sellerLoginEmail.trim();
@@ -281,10 +299,17 @@ export class SellerRegisterComponent {
         expectedRole: 'seller',
       })
       .subscribe({
-        next: (result: LoginToken) => {
+        next: (result: LoginToken & { onboardingRequired?: boolean }) => {
           if (result?.token) {
             result.user.email = email;
             this.userService.activateToken(result);
+            if (result.onboardingRequired) {
+              this.alertType = 'warning';
+              this.alertMessage =
+                'Seller account created. Please complete onboarding to activate dashboard.';
+              setTimeout(() => this.router.navigate(['/seller/pending']), 700);
+              return;
+            }
             this.alertType = 'success';
             this.alertMessage = 'Seller login successful.';
             setTimeout(() => this.router.navigate(['/seller/dashboard']), 700);
@@ -304,6 +329,13 @@ export class SellerRegisterComponent {
 
   onSubmit() {
     if (!this.acceptedTerms || this.isSubmitting) return;
+    if (this.isExistingSellerSession) {
+      this.alertType = 'warning';
+      this.alertMessage =
+        'Your seller account already exists. Complete onboarding from the pending page.';
+      setTimeout(() => this.router.navigate(['/seller/pending']), 600);
+      return;
+    }
 
     const sellerPayload: User = {
       firstName: this.firstName?.trim(),

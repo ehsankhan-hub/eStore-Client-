@@ -7,25 +7,27 @@ import { CommonModule } from '@angular/common';
    standalone: true,
    imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
    template: `
-    <div class="seller-layout bg-[#fcfdfe] min-h-screen flex overflow-hidden">
+    <div class="seller-layout bg-[#fcfdfe] min-h-screen relative overflow-hidden lg:flex">
       <!-- High-End Sidebar -->
-      <aside [class.w-80]="!isSidebarCollapsed()" 
+      <aside [class.w-80]="!isSidebarCollapsed()"
              [class.w-24]="isSidebarCollapsed()"
-             class="bg-[#020617] text-white hidden lg:flex flex-col sticky top-0 h-screen shadow-[10px_0_40px_rgba(0,0,0,0.2)] z-50 transition-all duration-500 ease-in-out border-r border-white/5 relative">
+             class="bg-[#020617] text-white hidden lg:flex flex-col sticky top-0 left-0 h-screen w-[85vw] max-w-[320px] lg:w-auto lg:max-w-none shadow-[10px_0_40px_rgba(0,0,0,0.2)] z-50 transition-all duration-500 ease-in-out border-r border-white/5 relative">
         
         <!-- Toggle Button (Floating) -->
         <button (click)="toggleSidebar()" 
-                class="absolute -right-3 top-24 bg-indigo-600 w-6 h-6 rounded-full flex items-center justify-center border-2 border-[#020617] hover:bg-white hover:text-indigo-600 transition-all cursor-pointer z-[60] shadow-xl">
+                class="absolute -right-3 top-24 bg-indigo-600 w-6 h-6 rounded-full hidden lg:flex items-center justify-center border-2 border-[#020617] hover:bg-white hover:text-indigo-600 transition-all cursor-pointer z-[60] shadow-xl">
            <svg [class.rotate-180]="isSidebarCollapsed()" class="w-2.5 h-2.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="4" d="M15 19l-7-7 7-7"/></svg>
         </button>
 
         <!-- Brand Area -->
-        <div class="p-8 border-b border-white/[0.03] bg-white/[0.01]">
-          <div class="flex items-center gap-4">
+        <div class="p-6 lg:p-8 border-b border-white/[0.03] bg-white/[0.01]">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-1">
             <div class="bg-gradient-to-tr from-indigo-600 to-indigo-400 h-11 w-11 rounded-2xl flex-shrink-0 flex items-center justify-center font-black text-xl shadow-[0_10px_20px_rgba(79,70,229,0.3)]">S</div>
             <div *ngIf="!isSidebarCollapsed()" class="overflow-hidden whitespace-nowrap animate-fade-in">
                 <span class="font-black text-lg tracking-tight block">Genesis</span>
                 <span class="text-[9px] text-indigo-400 font-black uppercase tracking-[0.2em]">Registry Admin</span>
+            </div>
             </div>
           </div>
         </div>
@@ -40,10 +42,18 @@ import { CommonModule } from '@angular/common';
              <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Dashboard</span>
           </a>
 
-          <a [routerLink]="['/seller', 'register']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
+          <a *ngIf="!isSellerVerified()"
+             [routerLink]="['/seller', 'register']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
              class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
              <svg class="w-6 h-6 flex-shrink-0 group-hover:text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15 7h3a2 2 0 012 2v8a2 2 0 01-2 2H6a2 2 0 01-2-2V9a2 2 0 012-2h3m6-3h-6a2 2 0 00-2 2v1h10V6a2 2 0 00-2-2zm-3 7v4m-2-2h4"/></svg>
              <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Register as Seller</span>
+          </a>
+
+          <a *ngIf="isSellerVerified()"
+             [routerLink]="['/seller', 'payout-settings']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl"
+             class="flex items-center gap-5 px-5 py-4 rounded-2xl border border-transparent hover:bg-white/[0.03] transition-all no-underline text-white/50 font-bold group">
+             <svg class="w-6 h-6 flex-shrink-0 group-hover:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+             <span *ngIf="!isSidebarCollapsed()" class="text-sm tracking-tight whitespace-nowrap animate-fade-in">Payout Settings</span>
           </a>
           
           <a [routerLink]="['/seller', 'products']" routerLinkActive="bg-white/5 text-white ring-1 ring-white/10 shadow-2xl" 
@@ -86,7 +96,7 @@ import { CommonModule } from '@angular/common';
 
           <div class="h-px bg-white/5 my-8 mx-4"></div>
 
-          <a [routerLink]="['/home', 'products']" 
+          <a [routerLink]="['/home', 'products']"
              class="flex items-center justify-center gap-3 w-full py-4 rounded-2xl bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 transition-all no-underline font-black text-[10px] uppercase tracking-widest border border-indigo-500/20 group">
              <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
              <span *ngIf="!isSidebarCollapsed()" class="animate-fade-in">Exit Store</span>
@@ -106,9 +116,9 @@ import { CommonModule } from '@angular/common';
       </aside>
 
       <!-- Content Shell -->
-      <div class="flex-1 flex flex-col h-screen overflow-hidden">
-        <header class="h-24 bg-white/80 backdrop-blur-2xl border-b border-gray-100 flex items-center justify-between px-12 sticky top-0 z-40">
-           <div class="flex items-center bg-gray-50 px-6 py-3.5 rounded-2xl w-full max-w-lg border border-gray-100 group transition-all focus-within:bg-white focus-within:shadow-xl focus-within:border-indigo-100">
+      <div class="w-full min-w-0 flex-1 flex flex-col h-screen overflow-hidden">
+        <header class="h-20 md:h-24 bg-white/80 backdrop-blur-2xl border-b border-gray-100 flex items-center justify-between px-3 md:px-12 sticky top-0 z-40">
+           <div class="flex items-center bg-gray-50 px-4 md:px-6 py-3 rounded-2xl w-full max-w-lg border border-gray-100 group transition-all focus-within:bg-white focus-within:shadow-xl focus-within:border-indigo-100">
               <svg class="w-5 h-5 text-gray-300 group-focus-within:text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="3" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
               <input type="text" placeholder="Global Search..." class="bg-transparent border-none outline-none ml-4 text-sm font-bold w-full text-slate-700">
            </div>
@@ -122,7 +132,17 @@ import { CommonModule } from '@angular/common';
            </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto p-12 custom-scrollbar">
+        <nav class="lg:hidden px-3 py-3 border-b border-gray-100 bg-white overflow-x-auto whitespace-nowrap">
+          <div class="inline-flex gap-2 min-w-max">
+            <a [routerLink]="['/seller', 'dashboard']" routerLinkActive="bg-indigo-600 text-white" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-bold no-underline">Dashboard</a>
+            <a *ngIf="!isSellerVerified()" [routerLink]="['/seller', 'register']" routerLinkActive="bg-indigo-600 text-white" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-bold no-underline">Register</a>
+            <a *ngIf="isSellerVerified()" [routerLink]="['/seller', 'payout-settings']" routerLinkActive="bg-indigo-600 text-white" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-bold no-underline">Payout</a>
+            <a [routerLink]="['/seller', 'products']" routerLinkActive="bg-indigo-600 text-white" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-bold no-underline">Products</a>
+            <a [routerLink]="['/seller', 'add-product']" routerLinkActive="bg-indigo-600 text-white" class="px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-bold no-underline">Add</a>
+          </div>
+        </nav>
+
+        <main class="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar">
            <div class="max-w-[1400px] mx-auto animate-fade-up">
               <router-outlet></router-outlet>
            </div>
@@ -143,8 +163,24 @@ import { CommonModule } from '@angular/common';
 })
 export class SellerComponent {
    isSidebarCollapsed = signal<boolean>(false);
+   isSellerVerified = signal<boolean>(false);
+
+   constructor() {
+      this.refreshSellerVerification();
+      if (typeof window !== 'undefined') {
+        window.addEventListener('storage', () => this.refreshSellerVerification());
+      }
+   }
+
+   private refreshSellerVerification() {
+      if (typeof window === 'undefined') return;
+      const payoutStatus = String(localStorage.getItem('payoutVerificationStatus') || '').toLowerCase();
+      const isStripeConnected = localStorage.getItem('isStripeConnected') === 'true';
+      this.isSellerVerified.set(isStripeConnected || payoutStatus === 'verified');
+   }
 
    toggleSidebar() {
       this.isSidebarCollapsed.update((state: any) => !state);
    }
+
 }

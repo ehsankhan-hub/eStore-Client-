@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, Location } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { FirebaseService } from '../../../services/firebase.service';
 import { UserService } from '../../home/services/user/user.service';
@@ -40,7 +40,7 @@ import { LoginToken } from '../../home/types/user.type';
         {{
           socialLoadingProvider === 'google'
             ? 'Please wait...'
-            : 'Continue with Google (Seller)'
+            : 'Continue with Google (Seller11)'
         }}
       </button>
 
@@ -61,7 +61,6 @@ export class SellerLoginComponent implements OnInit {
   constructor(
     private userService: UserService,
     private firebaseService: FirebaseService,
-    private location: Location,
     private router: Router
   ) {}
 
@@ -137,10 +136,17 @@ export class SellerLoginComponent implements OnInit {
         expectedRole: 'seller',
       })
       .subscribe({
-        next: (result: LoginToken) => {
+        next: (result: LoginToken & { onboardingRequired?: boolean }) => {
           if (result.token) {
             result.user.email = email;
             this.userService.activateToken(result);
+            if (result.onboardingRequired) {
+              this.alertMessage =
+                'Seller account created. Please complete onboarding to activate dashboard.';
+              this.alertType = 1;
+              setTimeout(() => this.router.navigate(['/seller/pending']), 700);
+              return;
+            }
             this.alertMessage = 'Seller login successful';
             this.alertType = 0;
             setTimeout(() => this.router.navigate(['/seller/dashboard']), 700);

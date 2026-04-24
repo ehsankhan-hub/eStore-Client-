@@ -378,6 +378,13 @@ export class SellerDashboardComponent implements OnInit {
       this.paymentService.syncPayoutVerification().subscribe({
         next: (r) => {
           if (r.mock) return;
+          console.log('[Stripe Sync]', {
+            detailsSubmitted: r.detailsSubmitted,
+            chargesEnabled: r.chargesEnabled,
+            payoutsEnabled: r.payoutsEnabled,
+            isStripeConnected: r.isStripeConnected,
+            payoutVerificationStatus: r.payoutVerificationStatus,
+          });
           if (typeof r.isStripeConnected === 'boolean') {
             this.isStripeConnected.set(r.isStripeConnected);
             localStorage.setItem('isStripeConnected', String(r.isStripeConnected));
@@ -420,7 +427,14 @@ export class SellerDashboardComponent implements OnInit {
       error: (err) => {
         console.error('Onboarding failed', err);
         this.loadingOnboarding.set(false);
-        alert('Could not start onboarding. Please try again later.');
+        const apiError = err?.error?.error;
+        if (apiError === 'stripe_connect_not_enabled') {
+          alert(
+            'Stripe Connect is not enabled for your Stripe account. Enable Connect in Stripe Dashboard, then try again.'
+          );
+          return;
+        }
+        alert(err?.error?.message || 'Could not start onboarding. Please try again later.');
       }
     });
   }
