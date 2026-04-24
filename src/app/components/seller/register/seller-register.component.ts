@@ -24,6 +24,10 @@ import { FirebaseService } from '../../../services/firebase.service';
            [class.text-rose-700]="alertType === 'error'">
         {{ alertMessage }}
       </div>
+      <div *ngIf="isPrefillLoading"
+           class="mb-4 rounded-md px-4 py-3 text-sm bg-slate-50 text-slate-600 border border-slate-200">
+        Loading your saved onboarding details...
+      </div>
 
       <div *ngIf="!isExistingSellerSession" class="mb-6 border border-indigo-100 rounded-lg p-4 bg-indigo-50/60">
         <h3 class="text-base font-semibold text-indigo-900 mb-3">Already a seller?</h3>
@@ -133,6 +137,13 @@ import { FirebaseService } from '../../../services/firebase.service';
         <div class="border-b pb-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">2. Bank / Payout Details</h3>
           <p class="text-xs text-gray-500 mb-4">Where should we send your earnings?</p>
+          <div
+            *ngIf="isExistingSellerSession && (accountLast4 || routingLast4)"
+            class="mb-4 rounded-md border border-indigo-100 bg-indigo-50 px-3 py-2 text-xs text-indigo-700"
+          >
+            <div *ngIf="accountLast4">Saved account: ending with <strong>{{ accountLast4 }}</strong></div>
+            <div *ngIf="routingLast4">Saved routing/SWIFT: ending with <strong>{{ routingLast4 }}</strong></div>
+          </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -142,13 +153,17 @@ import { FirebaseService } from '../../../services/firebase.service';
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700">Account Number</label>
-              <input type="text" [(ngModel)]="accountNumber" name="accountNumber" required
+              <input type="text" [(ngModel)]="accountNumber" name="accountNumber" [required]="!isExistingSellerSession"
+                [placeholder]="accountLast4 ? ('Enter new account number (current ends with ' + accountLast4 + ')') : ''"
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <p *ngIf="accountNumberHint" class="mt-1 text-xs text-gray-500">{{ accountNumberHint }}</p>
             </div>
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-gray-700">Routing Number / Swift Code</label>
-              <input type="text" [(ngModel)]="routingNumber" name="routingNumber" required
+              <input type="text" [(ngModel)]="routingNumber" name="routingNumber" [required]="!isExistingSellerSession"
+                [placeholder]="routingLast4 ? ('Enter new routing/SWIFT (current ends with ' + routingLast4 + ')') : ''"
                 class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <p *ngIf="routingNumberHint" class="mt-1 text-xs text-gray-500">{{ routingNumberHint }}</p>
             </div>
           </div>
         </div>
@@ -189,8 +204,13 @@ export class SellerRegisterComponent implements OnInit {
   bankName = '';
   accountNumber = '';
   routingNumber = '';
+  accountLast4 = '';
+  routingLast4 = '';
+  accountNumberHint = '';
+  routingNumberHint = '';
   acceptedTerms = false;
   isSubmitting = false;
+  isPrefillLoading = false;
   isLoginSubmitting = false;
   socialLoadingProvider: 'google' | 'github' | 'facebook' | null = null;
   sellerLoginEmail = '';
@@ -219,7 +239,43 @@ export class SellerRegisterComponent implements OnInit {
       this.email = currentUser.email || '';
       // Existing social seller already has an identity; onboarding shouldn't ask password again.
       this.password = 'SOCIAL_AUTH';
+      this.loadExistingSellerOnboarding(this.email);
     }
+  }
+
+  private loadExistingSellerOnboarding(email: string): void {
+    const normalizedEmail = String(email || '').trim();
+    if (!normalizedEmail) return;
+
+    this.isPrefillLoading = true;
+    this.userService.getSellerOnboarding(normalizedEmail).subscribe({
+      next: (result) => {
+        this.isPrefillLoading = false;
+        const data = result?.data;
+        if (!data) return;
+
+        this.firstName = data.firstName || this.firstName;
+        this.lastName = data.lastName || this.lastName;
+        this.email = data.email || this.email;
+        this.address = data.address || '';
+        this.city = data.city || '';
+        this.state = data.state || '';
+        this.pin = data.pin || '';
+        this.storeName = data.storeName || '';
+        this.bankName = data.bankName || '';
+        this.accountLast4 = data.accountLast4 || '';
+        this.routingLast4 = data.routingLast4 || '';
+        this.accountNumberHint = data.accountLast4
+          ? `Saved account ending with ${data.accountLast4}`
+          : '';
+        this.routingNumberHint = data.routingLast4
+          ? `Saved routing ending with ${data.routingLast4}`
+          : '';
+      },
+      error: () => {
+        this.isPrefillLoading = false;
+      },
+    });
   }
 
   onSellerLogin() {
@@ -330,10 +386,7 @@ export class SellerRegisterComponent implements OnInit {
   onSubmit() {
     if (!this.acceptedTerms || this.isSubmitting) return;
     if (this.isExistingSellerSession) {
-      this.alertType = 'warning';
-      this.alertMessage =
-        'Your seller account already exists. Complete onboarding from the pending page.';
-      setTimeout(() => this.router.navigate(['/seller/pending']), 600);
+      this.submitExistingSellerOnboarding();
       return;
     }
 
@@ -372,5 +425,60 @@ export class SellerRegisterComponent implements OnInit {
         this.alertMessage = err?.error?.message || 'Seller registration failed.';
       },
     });
+  }
+
+  private submitExistingSellerOnboarding(): void {
+    const email = String(this.email || '').trim();
+    if (!email) {
+      this.alertType = 'error';
+      this.alertMessage = 'Seller email is required.';
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.userService
+      .updateSellerOnboarding({
+        email,
+        firstName: this.firstName?.trim(),
+        lastName: this.lastName?.trim(),
+        address: this.address?.trim(),
+        city: this.city?.trim(),
+        state: this.state?.trim(),
+        pin: this.pin?.trim(),
+        storeName: this.storeName?.trim(),
+        bankName: this.bankName?.trim(),
+        accountNumber: this.accountNumber?.trim() || undefined,
+        routingNumber: this.routingNumber?.trim() || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.alertType = 'success';
+          this.alertMessage = 'Onboarding details saved.';
+          if (this.accountNumber?.trim()) {
+            const acctDigits = this.accountNumber.replace(/\D/g, '');
+            this.accountLast4 = acctDigits.slice(-4);
+            this.accountNumberHint = this.accountLast4
+              ? `Saved account ending with ${this.accountLast4}`
+              : this.accountNumberHint;
+          }
+          if (this.routingNumber?.trim()) {
+            const routeRaw = this.routingNumber.trim();
+            this.routingLast4 = routeRaw.slice(-4);
+            this.routingNumberHint = this.routingLast4
+              ? `Saved routing ending with ${this.routingLast4}`
+              : this.routingNumberHint;
+          }
+          this.accountNumber = '';
+          this.routingNumber = '';
+          setTimeout(() => this.router.navigate(['/seller/pending']), 700);
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          this.alertType = 'error';
+          this.alertMessage =
+            err?.error?.message || 'Unable to save seller onboarding details.';
+        },
+      });
   }
 }

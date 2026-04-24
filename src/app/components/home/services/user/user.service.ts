@@ -48,6 +48,58 @@ export class UserService {
     return this.http.post(`${API_BASE_URL}/users/social-login`, payload);
   }
 
+  getSellerOnboarding(email: string): Observable<{
+    message: string;
+    data: {
+      firstName: string;
+      lastName: string;
+      email: string;
+      address: string;
+      city: string;
+      state: string;
+      pin: string;
+      storeName: string;
+      bankName: string;
+      accountLast4: string;
+      routingLast4: string;
+      payoutVerificationStatus: string | null;
+    };
+  }> {
+    return this.http.get<{
+      message: string;
+      data: {
+        firstName: string;
+        lastName: string;
+        email: string;
+        address: string;
+        city: string;
+        state: string;
+        pin: string;
+        storeName: string;
+        bankName: string;
+        accountLast4: string;
+        routingLast4: string;
+        payoutVerificationStatus: string | null;
+      };
+    }>(`${API_BASE_URL}/users/seller-onboarding`, { params: { email } });
+  }
+
+  updateSellerOnboarding(payload: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    address: string;
+    city: string;
+    state: string;
+    pin: string;
+    storeName: string;
+    bankName: string;
+    accountNumber?: string;
+    routingNumber?: string;
+  }): Observable<{ message: string }> {
+    return this.http.put<{ message: string }>(`${API_BASE_URL}/users/seller-onboarding`, payload);
+  }
+
   activateToken(token: LoginToken): void {
     // token.expiresInSeconds = 10;
     localStorage.setItem('token', token.token);

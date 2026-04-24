@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { UserService } from '../home/services/user/user.service';
 
 @Component({
    selector: 'app-seller',
@@ -128,7 +129,13 @@ import { CommonModule } from '@angular/common';
                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
                  Network Active
               </div>
-              <button class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 transition-all">Sign Out</button>
+              <button
+                type="button"
+                (click)="signOut()"
+                class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 transition-all cursor-pointer"
+              >
+                Sign Out
+              </button>
            </div>
         </header>
 
@@ -165,7 +172,10 @@ export class SellerComponent {
    isSidebarCollapsed = signal<boolean>(false);
    isSellerVerified = signal<boolean>(false);
 
-   constructor() {
+   constructor(
+      private readonly userService: UserService,
+      private readonly router: Router
+   ) {
       this.refreshSellerVerification();
       if (typeof window !== 'undefined') {
         window.addEventListener('storage', () => this.refreshSellerVerification());
@@ -181,6 +191,11 @@ export class SellerComponent {
 
    toggleSidebar() {
       this.isSidebarCollapsed.update((state: any) => !state);
+   }
+
+   signOut(): void {
+      this.userService.logout();
+      void this.router.navigate(['/seller/login']);
    }
 
 }
