@@ -43,6 +43,7 @@ export class UserService {
     lastName?: string;
     provider: 'google' | 'github' | 'facebook';
     providerUid: string;
+    expectedRole?: 'buyer' | 'seller' | 'admin';
   }): Observable<any> {
     return this.http.post(`${API_BASE_URL}/users/social-login`, payload);
   }

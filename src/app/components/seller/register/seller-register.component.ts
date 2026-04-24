@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../home/services/user/user.service';
 import { User } from '../../home/types/user.type';
+import { LoginToken } from '../../home/types/user.type';
+import { FirebaseService } from '../../../services/firebase.service';
 
 @Component({
   selector: 'app-seller-register',
@@ -21,6 +23,49 @@ import { User } from '../../home/types/user.type';
            [class.bg-rose-50]="alertType === 'error'"
            [class.text-rose-700]="alertType === 'error'">
         {{ alertMessage }}
+      </div>
+
+      <div class="mb-6 border border-indigo-100 rounded-lg p-4 bg-indigo-50/60">
+        <h3 class="text-base font-semibold text-indigo-900 mb-3">Already a seller?</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input
+            type="email"
+            [(ngModel)]="sellerLoginEmail"
+            name="sellerLoginEmail"
+            placeholder="Seller email"
+            class="md:col-span-1 block w-full border border-indigo-200 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          />
+          <input
+            type="password"
+            [(ngModel)]="sellerLoginPassword"
+            name="sellerLoginPassword"
+            placeholder="Password"
+            class="md:col-span-1 block w-full border border-indigo-200 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+          />
+          <button
+            type="button"
+            (click)="onSellerLogin()"
+            [disabled]="isLoginSubmitting"
+            class="md:col-span-1 w-full py-2 px-4 rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {{ isLoginSubmitting ? 'Signing in...' : 'Seller Login' }}
+          </button>
+        </div>
+
+        <div class="my-3 text-center text-xs text-indigo-500 font-medium">or</div>
+
+        <button
+          type="button"
+          (click)="onSellerSocialLogin('google')"
+          [disabled]="socialLoadingProvider !== null"
+          class="w-full py-2 px-4 rounded-md border border-indigo-200 text-indigo-700 bg-white hover:bg-indigo-50 disabled:opacity-50"
+        >
+          {{
+            socialLoadingProvider === 'google'
+              ? 'Please wait...'
+              : 'Continue with Google (Seller)'
+          }}
+        </button>
       </div>
       
       <form (ngSubmit)="onSubmit()" #registerForm="ngForm" class="space-y-6">
@@ -146,10 +191,116 @@ export class SellerRegisterComponent {
   routingNumber = '';
   acceptedTerms = false;
   isSubmitting = false;
+  isLoginSubmitting = false;
+  socialLoadingProvider: 'google' | 'github' | 'facebook' | null = null;
+  sellerLoginEmail = '';
+  sellerLoginPassword = '';
   alertMessage = '';
   alertType: 'success' | 'warning' | 'error' = 'warning';
 
-  constructor(private router: Router, private userService: UserService) {}
+  constructor(
+    private router: Router,
+    private userService: UserService,
+    private firebaseService: FirebaseService
+  ) {}
+
+  onSellerLogin() {
+    const email = this.sellerLoginEmail.trim();
+    const password = this.sellerLoginPassword;
+    if (!email || !password) {
+      this.alertType = 'warning';
+      this.alertMessage = 'Please enter seller email and password.';
+      return;
+    }
+    this.isLoginSubmitting = true;
+    this.userService.login(email, password).subscribe({
+      next: (result: LoginToken) => {
+        this.isLoginSubmitting = false;
+        if (result?.token && result?.user?.role === 'seller') {
+          result.user.email = email;
+          this.userService.activateToken(result);
+          this.alertType = 'success';
+          this.alertMessage = 'Seller login successful.';
+          setTimeout(() => this.router.navigate(['/seller/dashboard']), 700);
+          return;
+        }
+        this.alertType = 'error';
+        this.alertMessage = 'This account is not registered as seller.';
+      },
+      error: (err) => {
+        this.isLoginSubmitting = false;
+        this.alertType = 'error';
+        this.alertMessage = err?.error?.message || 'Seller login failed.';
+      },
+    });
+  }
+
+  async onSellerSocialLogin(provider: 'google' | 'github' | 'facebook'): Promise<void> {
+    if (!this.firebaseService.isConfigured()) {
+      this.alertType = 'error';
+      this.alertMessage = 'Social sign-in needs Firebase config in environment files.';
+      return;
+    }
+    this.socialLoadingProvider = provider;
+    try {
+      const socialUser = await this.firebaseService.loginWithSocialProvider(provider);
+      if (!socialUser) {
+        this.alertType = 'success';
+        this.alertMessage = 'Redirecting to secure sign-in...';
+        return;
+      }
+      this.finishSellerSocialLogin(provider, socialUser);
+    } catch (err: any) {
+      this.alertType = 'error';
+      this.alertMessage = err?.message || 'Seller social login failed.';
+    } finally {
+      this.socialLoadingProvider = null;
+    }
+  }
+
+  private finishSellerSocialLogin(
+    provider: 'google' | 'github' | 'facebook',
+    socialUser: any
+  ): void {
+    const email = socialUser.email || '';
+    if (!email) {
+      this.alertType = 'warning';
+      this.alertMessage = 'Social account has no email.';
+      return;
+    }
+    const [firstName, ...rest] = (socialUser.displayName || '').trim().split(' ');
+    const lastName = rest.join(' ').trim();
+
+    this.userService
+      .socialLogin({
+        email,
+        firstName: firstName || 'Seller',
+        lastName: lastName || provider,
+        provider,
+        providerUid: socialUser.uid,
+        expectedRole: 'seller',
+      })
+      .subscribe({
+        next: (result: LoginToken) => {
+          if (result?.token) {
+            result.user.email = email;
+            this.userService.activateToken(result);
+            this.alertType = 'success';
+            this.alertMessage = 'Seller login successful.';
+            setTimeout(() => this.router.navigate(['/seller/dashboard']), 700);
+          } else {
+            this.alertType = 'warning';
+            this.alertMessage = 'Seller social login failed.';
+          }
+        },
+        error: (err) => {
+          this.alertType = 'error';
+          this.alertMessage =
+            err?.error?.message ||
+            'Seller social login failed. Ensure this email is registered as seller.';
+        },
+      });
+  }
 
   onSubmit() {
     if (!this.acceptedTerms || this.isSubmitting) return;
@@ -176,8 +327,8 @@ export class SellerRegisterComponent {
         this.isSubmitting = false;
         if (result?.message === 'Success') {
           this.alertType = 'success';
-          this.alertMessage = 'Seller account created. Please login.';
-          setTimeout(() => this.router.navigate(['/home/login']), 800);
+          this.alertMessage = 'Seller account created. Please login as seller.';
+          setTimeout(() => this.router.navigate(['/seller/login']), 800);
           return;
         }
         this.alertType = 'warning';

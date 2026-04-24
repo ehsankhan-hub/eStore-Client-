@@ -142,6 +142,7 @@ export class UserLoginComponent implements OnInit {
           lastName: lastName || provider,
           provider,
           providerUid: socialUser.uid,
+          expectedRole: 'buyer',
         })
         .subscribe({
           next: (result: LoginToken) => {
