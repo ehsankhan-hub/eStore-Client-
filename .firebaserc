@@ -1,7 +1,5 @@
 {
   "projects": {
-    "eStore": "estore-pwa-dde6c"
-  },
-  "targets": {},
-  "etags": {}
+    "default": "estore-pwa-dde6c"
+  }
 }
