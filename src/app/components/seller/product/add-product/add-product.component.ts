@@ -119,6 +119,18 @@ import { UserService } from '../../../home/services/user/user.service';
                 </div>
               </div>
             </div>
+
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700">Specifications (dynamic)</label>
+              <textarea
+                [(ngModel)]="specificationsText"
+                name="specificationsText"
+                rows="6"
+                placeholder="Memory Type: No Expandable Memory&#10;SIM Count: Dual SIM&#10;RAM Size: 8 GB"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500"
+              ></textarea>
+              <p class="text-xs text-gray-500 mt-1">Use one line per spec in format: Key: Value</p>
+            </div>
           </div>
 
           <div>
@@ -172,6 +184,7 @@ export class AddProductComponent {
   discount_pct: number | null = null;
   expires_at: string = '';
   memoryOptionsText = '';
+  specificationsText = '';
   colorOptions: Array<{ name: string; hex: string }> = [
     { name: 'Black', hex: '#1f2937' },
   ];
@@ -232,6 +245,36 @@ export class AddProductComponent {
       .filter((color) => color.hex.length > 0);
   }
 
+  private getSpecifications(): Array<{ key: string; value: string }> {
+    return String(this.specificationsText || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => this.parseSpecificationLine(line))
+      .filter((entry): entry is { key: string; value: string } => !!entry);
+  }
+
+  private parseSpecificationLine(line: string): { key: string; value: string } | null {
+    const raw = String(line || '').trim();
+    if (!raw) return null;
+
+    const tabIdx = raw.indexOf('\t');
+    if (tabIdx > 0) {
+      const key = raw.slice(0, tabIdx).trim();
+      const value = raw.slice(tabIdx + 1).trim();
+      return key && value ? { key, value } : null;
+    }
+
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx > 0) {
+      const key = raw.slice(0, colonIdx).trim();
+      const value = raw.slice(colonIdx + 1).trim();
+      return key && value ? { key, value } : null;
+    }
+
+    return null;
+  }
+
   onSubmit() {
     const formData = new FormData();
     formData.append('product_name', this.title);
@@ -240,6 +283,7 @@ export class AddProductComponent {
     if (this.price) formData.append('price', String(this.price));
     formData.append('memory_options', JSON.stringify(this.getMemoryOptions()));
     formData.append('color_options', JSON.stringify(this.getColorOptions()));
+    formData.append('specifications', JSON.stringify(this.getSpecifications()));
     const user = this.userService.loggedInUserInfo();
     if (user && user.id) {
       formData.append('seller_id', String(user.id));

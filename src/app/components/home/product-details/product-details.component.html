@@ -100,24 +100,6 @@
       </div>
     </div>
 
-    <div class="product-description mb-6">
-      <ng-container *ngIf="descriptionLines().length > 0; else emptyDescription">
-        <div
-          *ngFor="let line of descriptionLines()"
-          [ngClass]="{
-            'desc-section': line.type === 'section',
-            'desc-bullet': line.type === 'bullet',
-            'desc-text': line.type === 'text'
-          }"
-        >
-          {{ line.text }}
-        </div>
-      </ng-container>
-      <ng-template #emptyDescription>
-        <div class="desc-text">No description available.</div>
-      </ng-template>
-    </div>
-
     <button
       class="flex items-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-300 shadow cursor-pointer"
       (click)="addToCart()"
@@ -125,6 +107,68 @@
       <fa-icon [icon]="faShoppingCart" class="text-lg"></fa-icon>
       <span class="text-lg">Add to Cart</span>
     </button>
+  </div>
+
+  <div class="w-full mt-8">
+    <div class="info-tabs mb-4">
+      <button
+        type="button"
+        class="info-tab-btn cursor-pointer"
+        [class.info-tab-btn-active]="activeInfoTab() === 'overview'"
+        (click)="setInfoTab('overview')"
+      >
+        Product Overview
+      </button>
+      <button
+        type="button"
+        class="info-tab-btn cursor-pointer"
+        [class.info-tab-btn-active]="activeInfoTab() === 'reviews'"
+        (click)="setInfoTab('reviews')"
+      >
+        Ratings & Reviews
+      </button>
+    </div>
+
+    @if (activeInfoTab() === 'overview') {
+    <div class="overview-panel mb-6">
+      <h3 class="overview-title">Product Overview</h3>
+      <div class="product-description mb-6">
+        <ng-container *ngIf="descriptionLines().length > 0; else emptyDescription">
+          <div
+            *ngFor="let line of descriptionLines()"
+            [ngClass]="{
+              'desc-section': line.type === 'section',
+              'desc-bullet': line.type === 'bullet',
+              'desc-text': line.type === 'text'
+            }"
+          >
+            {{ line.text }}
+          </div>
+        </ng-container>
+        <ng-template #emptyDescription>
+          <div class="desc-text">No description available.</div>
+        </ng-template>
+      </div>
+
+      <div *ngIf="productSpecifications().length > 0" class="mb-6">
+        <h3 class="text-xl font-semibold text-slate-900 mb-3">Specifications</h3>
+        <div class="specifications-table-grid">
+          <div class="spec-row" *ngFor="let spec of productSpecifications()">
+            <div class="spec-key">{{ spec.key }}</div>
+            <div class="spec-value">{{ spec.value }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    } @else {
+    <div class="overview-panel mb-6">
+      <h3 class="overview-title">Ratings & Reviews</h3>
+      <div class="reviews-summary">
+        <app-ratings [score]="product()?.ratings ?? 0"></app-ratings>
+        <p class="reviews-note">Customer review list will appear here as you add review APIs.</p>
+      </div>
+    </div>
+    }
   </div>
 </div>
 

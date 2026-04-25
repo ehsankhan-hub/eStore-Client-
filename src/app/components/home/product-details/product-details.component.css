@@ -179,6 +179,55 @@
   flex-direction: column;
   gap: 0.55rem;
   color: #374151;
+  text-align: left;
+}
+
+.overview-panel {
+  text-align: left;
+}
+
+.overview-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info-tab-btn {
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.info-tab-btn-active {
+  border-color: #111827;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: inset 0 0 0 1px #111827;
+}
+
+.reviews-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reviews-note {
+  color: #6b7280;
+  font-size: 0.95rem;
 }
 
 .desc-section {
@@ -212,4 +261,44 @@
   height: 0.38rem;
   border-radius: 50%;
   background: #f59e0b;
+}
+
+.specifications-table-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.spec-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 42%) 1fr;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.35rem;
+  overflow: hidden;
+  background: #ffffff;
+  min-height: 48px;
+}
+
+.spec-key {
+  background: #f3f4f6;
+  color: #4b5563;
+  font-weight: 500;
+  padding: 0.72rem 0.9rem;
+  display: flex;
+  align-items: center;
+  line-height: 1.35;
+}
+
+.spec-value {
+  color: #111827;
+  padding: 0.72rem 0.9rem;
+  display: flex;
+  align-items: center;
+  line-height: 1.35;
+}
+
+@media (max-width: 768px) {
+  .specifications-table-grid {
+    grid-template-columns: 1fr;
+  }
 }

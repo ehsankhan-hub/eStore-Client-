@@ -176,6 +176,18 @@ import { UserService } from '../../../home/services/user/user.service';
                         </div>
                       </div>
                     </div>
+
+                    <div class="mt-4">
+                      <label class="block text-xs font-semibold text-gray-700 mb-1">Specifications (dynamic)</label>
+                      <textarea
+                        [(ngModel)]="editingProduct.specificationsText"
+                        name="specificationsText"
+                        rows="6"
+                        placeholder="Memory Type: No Expandable Memory&#10;SIM Count: Dual SIM"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                      ></textarea>
+                      <p class="text-[10px] text-gray-500 mt-1">One line per spec in format: Key: Value</p>
+                    </div>
                   </div>
                 </div>
 
@@ -348,6 +360,9 @@ export class ProductListComponent implements OnInit {
     this.selectedFiles = []; // Reset file selection
     this.editingProduct.memoryOptionsText = this.parseMemoryOptions(product.memory_options).join(', ');
     this.editingProduct.colorOptions = this.parseColorOptions(product.color_options);
+    this.editingProduct.specificationsText = this.parseSpecifications(product.specifications)
+      .map((spec) => `${spec.key}: ${spec.value}`)
+      .join('\n');
     
     // Format date for <input type="date"> (YYYY-MM-DD)
     if (this.editingProduct.expires_at) {
@@ -406,6 +421,36 @@ export class ProductListComponent implements OnInit {
       .filter((color: any) => color.hex.length > 0);
   }
 
+  private getEditSpecifications(): Array<{ key: string; value: string }> {
+    return String(this.editingProduct.specificationsText || '')
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => this.parseSpecificationLine(line))
+      .filter((entry): entry is { key: string; value: string } => !!entry);
+  }
+
+  private parseSpecificationLine(line: string): { key: string; value: string } | null {
+    const raw = String(line || '').trim();
+    if (!raw) return null;
+
+    const tabIdx = raw.indexOf('\t');
+    if (tabIdx > 0) {
+      const key = raw.slice(0, tabIdx).trim();
+      const value = raw.slice(tabIdx + 1).trim();
+      return key && value ? { key, value } : null;
+    }
+
+    const colonIdx = raw.indexOf(':');
+    if (colonIdx > 0) {
+      const key = raw.slice(0, colonIdx).trim();
+      const value = raw.slice(colonIdx + 1).trim();
+      return key && value ? { key, value } : null;
+    }
+
+    return null;
+  }
+
   private parseMemoryOptions(value: unknown): string[] {
     const parsed = this.parseJsonArray(value);
     if (parsed.length === 0 && typeof value === 'string' && value.includes(',')) {
@@ -438,6 +483,18 @@ export class ProductListComponent implements OnInit {
         };
       })
       .filter((color) => /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(color.hex));
+  }
+
+  private parseSpecifications(value: unknown): Array<{ key: string; value: string }> {
+    const parsed = this.parseJsonArray(value);
+    return parsed
+      .map((entry: any) => {
+        const key = String(entry?.key || entry?.name || entry?.label || '').trim();
+        const val = String(entry?.value || entry?.val || '').trim();
+        if (!key || !val) return null;
+        return { key, value: val };
+      })
+      .filter((entry): entry is { key: string; value: string } => !!entry);
   }
 
   private parseJsonArray(value: unknown): any[] {
@@ -483,6 +540,7 @@ export class ProductListComponent implements OnInit {
     formData.append('stock_quantity', String(this.editingProduct.stock_quantity || 0));
     formData.append('memory_options', JSON.stringify(this.getEditMemoryOptions()));
     formData.append('color_options', JSON.stringify(this.getEditColorOptions()));
+    formData.append('specifications', JSON.stringify(this.getEditSpecifications()));
     
     // Offer data
     if (this.editingProduct.discount_pct) {

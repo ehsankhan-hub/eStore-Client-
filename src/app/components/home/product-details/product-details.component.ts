@@ -23,8 +23,10 @@ export class ProductDetailsComponent {
 
   readonly product = signal<Product | null>(null);
   readonly isColorDialogOpen = signal(false);
+  readonly activeInfoTab = signal<'overview' | 'reviews'>('overview');
   readonly productColorOptions = computed(() => this.parseColorOptions(this.product()?.color_options));
   readonly productMemoryOptions = computed(() => this.parseMemoryOptions(this.product()?.memory_options));
+  readonly productSpecifications = computed(() => this.parseSpecifications(this.product()?.specifications));
   readonly selectedColor = signal<{ name: string; hex: string } | null>(null);
   readonly selectedMemory = signal('');
   readonly descriptionLines = computed(() =>
@@ -126,6 +128,10 @@ export class ProductDetailsComponent {
     this.isColorDialogOpen.set(false);
   }
 
+  setInfoTab(tab: 'overview' | 'reviews'): void {
+    this.activeInfoTab.set(tab);
+  }
+
   private formatDescription(description: string): Array<{ type: 'section' | 'bullet' | 'text'; text: string }> {
     return String(description || '')
       .split(/\r?\n/)
@@ -196,6 +202,18 @@ export class ProductDetailsComponent {
         };
       })
       .filter((color) => /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(color.hex));
+  }
+
+  private parseSpecifications(value: Product['specifications']): Array<{ key: string; value: string }> {
+    const parsed = this.parseJsonArray(value);
+    return parsed
+      .map((entry: any) => {
+        const key = String(entry?.key || entry?.name || entry?.label || '').trim();
+        const val = String(entry?.value || entry?.val || '').trim();
+        if (!key || !val) return null;
+        return { key, value: val };
+      })
+      .filter((entry): entry is { key: string; value: string } => !!entry);
   }
 
   private parseJsonArray(value: unknown): any[] {

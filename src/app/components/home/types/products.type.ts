@@ -7,8 +7,10 @@ export interface Product {
   ratings: number;
   product_description?: string;
   description?: string; // Backend currently sends this field name
+  variant_options?: Array<{ name: string; values: string[] }> | string | null;
   memory_options?: string[] | string | null;
   color_options?: Array<{ name: string; hex: string }> | string | null;
+  specifications?: Array<{ key: string; value: string }> | string | null;
   category_id: number;
   galleryImages: any[] | undefined; // Array of images for this product
   currentImageIndex?: number;
