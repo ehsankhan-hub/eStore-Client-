@@ -17,9 +17,14 @@
       <div class="absolute top-2 left-2 z-10 flex flex-col gap-1">
         <!-- Real Offer Badge -->
         @if (product.discount_pct && product.discount_pct > 0) {
-        <div class="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-wider animate-pulse">
+        <div
+          class="offer-badge text-[10px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-wider"
+          [class.offer-badge-last-day]="isLastDayOffer(product)"
+          [class.bg-red-600]="!isLastDayOffer(product)"
+          [class.text-white]="true"
+        >
            <fa-icon [icon]="faTag" class="mr-1"></fa-icon> 
-           {{ product.offer_name || 'Limited Deal' }}: -{{ product.discount_pct }}%
+           {{ isLastDayOffer(product) ? 'Last day' : (product.offer_name || 'Limited Deal') }}: -{{ product.discount_pct }}%
         </div>
         }
         @if (enhancedProduct.isBestSeller) {
@@ -132,95 +137,113 @@
           }
         </div>
 
-        <!-- Star Rating (like first image) -->
-        <div class="mb-3">
-          <div class="flex items-center gap-2">
-            <div class="flex items-center">
-              @for (i of [1, 2, 3, 4, 5]; track i) {
-                <fa-icon [icon]="faStar" 
-                         [class.text-yellow-400]="i <= getStarRating(product)"
-                         [class.text-gray-300]="i > getStarRating(product)"
-                         class="text-sm"></fa-icon>
+        <div class="product-meta-columns">
+          <div class="meta-left">
+            <!-- Star Rating (like first image) -->
+            <div class="mb-3">
+              <div class="flex items-center gap-2">
+                <div class="flex items-center">
+                  @for (i of [1, 2, 3, 4, 5]; track i) {
+                    <fa-icon [icon]="faStar" 
+                             [class.text-yellow-400]="i <= getStarRating(product)"
+                             [class.text-gray-300]="i > getStarRating(product)"
+                             class="text-sm"></fa-icon>
+                  }
+                </div>
+                <span class="text-xs text-gray-600">({{ getReviewCount(product) }})</span>
+              </div>
+            </div>
+
+            <!-- Real Price Section -->
+            <div class="mb-3">
+              @if (product.discount_pct && product.discount_pct > 0) {
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-bold text-red-600">
+                  ${{ product.offer_price | number:'1.2-2' }}
+                </span>
+                <span class="text-sm text-gray-400 line-through">
+                  ${{ product.price }}
+                </span>
+              </div>
+              @if (isLastDayOffer(product)) {
+              <div class="mt-1">
+                <span class="offer-badge-last-day inline-flex items-center text-[10px] font-bold text-white px-2 py-1 rounded uppercase tracking-wider">
+                  <fa-icon [icon]="faTag" class="mr-1"></fa-icon>
+                  Last day
+                </span>
+              </div>
+              }
+              } @else {
+              <span class="text-lg font-bold text-gray-900">
+                ${{ product.price }}
+              </span>
               }
             </div>
-            <span class="text-xs text-gray-600">({{ getReviewCount(product) }})</span>
+
+            <!-- Shipping Info -->
+            @if (enhancedProduct.shippingInfo || enhancedProduct.freeShipping) {
+            <div class="mb-3">
+              @if (enhancedProduct.freeShipping) {
+              <span class="text-xs text-green-600 font-medium">
+                <fa-icon [icon]="faTruck" class="mr-1"></fa-icon>
+                Free Shipping
+              </span>
+              } @else if (enhancedProduct.shippingInfo) {
+              <span class="text-xs text-gray-600">
+                <fa-icon [icon]="faTruck" class="mr-1"></fa-icon>
+                {{ enhancedProduct.shippingInfo }}
+              </span>
+              }
+            </div>
+            }
+
+            <!-- Stock Status -->
+            <div class="mb-3">
+              @if (isInStock(product)) {
+              <span class="text-xs text-green-600 font-medium">
+                <fa-icon [icon]="faCheckCircle" class="mr-1"></fa-icon>
+                In Stock ({{ getStockLevel(product) }})
+              </span>
+              } @else {
+              <span class="text-xs text-red-600 font-medium">
+                <fa-icon [icon]="faTimesCircle" class="mr-1"></fa-icon>
+                Out of Stock
+              </span>
+              }
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2 mt-auto">
+              <!-- Add to Cart Button -->
+              <button
+                class="flex-1 flex items-center justify-center gap-2 py-2 text-white bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors font-medium text-sm"
+                (click)="addToCart(product)"
+                [disabled]="!isInStock(product)"
+                [class.opacity-50]="!isInStock(product)"
+                [class.cursor-not-allowed]="!isInStock(product)"
+              >
+                <fa-icon [icon]="faShoppingCart" class="text-sm"></fa-icon>
+                <span>{{ isInStock(product) ? 'Add to Cart' : 'Out of Stock' }}</span>
+              </button>
+
+              <!-- Quick View Button (Mobile) -->
+              @if (enhancedProduct.quickViewAvailable) {
+              <button
+                class="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                (click)="openQuickView(enhancedProduct)"
+                title="Quick View"
+              >
+                <fa-icon [icon]="faEye" class="text-sm"></fa-icon>
+              </button>
+              }
+            </div>
           </div>
-        </div>
 
-        <!-- Real Price Section -->
-        <div class="mb-3">
-          @if (product.discount_pct && product.discount_pct > 0) {
-          <div class="flex items-center gap-2">
-            <span class="text-lg font-bold text-red-600">
-              ${{ product.offer_price | number:'1.2-2' }}
-            </span>
-            <span class="text-sm text-gray-400 line-through">
-              ${{ product.price }}
-            </span>
+          <div class="meta-right">
+            <p class="text-xs text-gray-500 leading-relaxed product-description-preview">
+              {{ product.product_description || product.description || 'No description available.' }}
+            </p>
           </div>
-          } @else {
-          <span class="text-lg font-bold text-gray-900">
-            ${{ product.price }}
-          </span>
-          }
-        </div>
-
-        <!-- Shipping Info -->
-        @if (enhancedProduct.shippingInfo || enhancedProduct.freeShipping) {
-        <div class="mb-3">
-          @if (enhancedProduct.freeShipping) {
-          <span class="text-xs text-green-600 font-medium">
-            <fa-icon [icon]="faTruck" class="mr-1"></fa-icon>
-            Free Shipping
-          </span>
-          } @else if (enhancedProduct.shippingInfo) {
-          <span class="text-xs text-gray-600">
-            <fa-icon [icon]="faTruck" class="mr-1"></fa-icon>
-            {{ enhancedProduct.shippingInfo }}
-          </span>
-          }
-        </div>
-        }
-
-        <!-- Stock Status -->
-        <div class="mb-3">
-          @if (isInStock(product)) {
-          <span class="text-xs text-green-600 font-medium">
-            <fa-icon [icon]="faCheckCircle" class="mr-1"></fa-icon>
-            In Stock ({{ getStockLevel(product) }})
-          </span>
-          } @else {
-          <span class="text-xs text-red-600 font-medium">
-            <fa-icon [icon]="faTimesCircle" class="mr-1"></fa-icon>
-            Out of Stock
-          </span>
-          }
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex gap-2 mt-auto">
-          <!-- Add to Cart Button -->
-          <button
-            class="flex-1 flex items-center justify-center gap-2 py-2 text-white bg-blue-600 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors font-medium text-sm"
-            (click)="addToCart(product)"
-            [disabled]="!isInStock(product)"
-            [class.opacity-50]="!isInStock(product)"
-            [class.cursor-not-allowed]="!isInStock(product)"
-          >
-            <fa-icon [icon]="faShoppingCart" class="text-sm"></fa-icon>
-            <span>{{ isInStock(product) ? 'Add to Cart' : 'Out of Stock' }}</span>
-          </button>
-
-          <!-- Quick View Button (Mobile) -->
-          @if (enhancedProduct.quickViewAvailable) {
-          <button
-            class="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            (click)="openQuickView(enhancedProduct)"
-            title="Quick View"
-          >
-            <fa-icon [icon]="faEye" class="text-sm"></fa-icon>
-          </button>
-          }
         </div>
 
         } @placeholder (minimum 500ms) {

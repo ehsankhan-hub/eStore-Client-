@@ -5,7 +5,10 @@ export interface Product {
   product_img: string;
   price: number;
   ratings: number;
-  product_description: string;
+  product_description?: string;
+  description?: string; // Backend currently sends this field name
+  memory_options?: string[] | string | null;
+  color_options?: Array<{ name: string; hex: string }> | string | null;
   category_id: number;
   galleryImages: any[] | undefined; // Array of images for this product
   currentImageIndex?: number;
@@ -22,4 +25,5 @@ export interface Product {
   offer_price?: number; // Price after discount
   offer_name?: string; // Name of the active promotion
   discount_pct?: number; // Real discount percentage from the Offers system
+  expires_at?: string | null; // Offer expiration timestamp from backend
 }

@@ -89,14 +89,17 @@ export class HotDealsComponent implements OnInit {
       imageName = product.product_img || product.image;
     }
 
-    if (!imageName) return '/assets/images/shop-1.jpg';
-    if (imageName.startsWith('http')) return imageName;
-    
-    // Check if it's a backend upload
-    if (imageName.includes('-') && imageName.includes('.')) {
-        return `${API_BASE_URL}/uploads/${imageName}`;
-    }
-    
-    return `/assets/images/${imageName}`;
+    const raw = String(imageName || '').trim();
+    if (!raw || raw === 'undefined' || raw === 'null') return '';
+    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+
+    const normalized = raw.replace(/\\/g, '/').replace(/^\/+/, '');
+    const withoutUploadsPrefix = normalized.replace(/^uploads\//i, '');
+    const encodedPath = withoutUploadsPrefix
+      .split('/')
+      .filter(Boolean)
+      .map((part) => encodeURIComponent(part))
+      .join('/');
+    return `${API_BASE_URL}/uploads/${encodedPath}`;
   }
 }

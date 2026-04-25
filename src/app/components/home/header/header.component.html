@@ -73,14 +73,15 @@
       </div>
 
       <!-- Cart -->
-      <div class="nav-box flex-row items-end relative px-2" (click)="navigateToCart()">
-        <div class="cart-container">
-           <fa-icon [icon]="faShoppingCart" class="text-3xl text-white"></fa-icon>
-           <span class="cart-count">
-            {{ cart.totalProducts() || 0 }}
-           </span>
+      <div class="nav-box cart-chip-wrapper px-2" (click)="navigateToCart()">
+        <div class="cart-chip">
+          <div class="cart-chip-icon-wrap">
+            <fa-icon [icon]="faShoppingCart" class="cart-chip-icon"></fa-icon>
+            <span class="cart-chip-count">{{ cart.totalProducts() || 0 }}</span>
+          </div>
+          <span class="cart-chip-title">Cart</span>
         </div>
-        <span class="nav-line-2 self-end mb-1 hidden md:inline ml-1">Cart</span>
+        <span class="cart-chip-shipping">Free shipping</span>
       </div>
     </div>
   </div>

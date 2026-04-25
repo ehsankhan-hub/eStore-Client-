@@ -73,8 +73,6 @@ export class PastOrdersComponent {
     this.pastOrders().find((o: PastOrder) => o.orderId === this.selectedOrderId())
   );
 
-  private imageBasePath = '/assets/images/';
-
   readonly loadingProducts = signal<boolean>(false);
 
   constructor() {
@@ -104,26 +102,24 @@ export class PastOrdersComponent {
   }
 
   getImageUrl(imageName: string | undefined): string {
-    if (!imageName || imageName === 'undefined' || imageName.trim() === '') {
-      return `${this.imageBasePath}shop-1.jpg`;
-    }
-    
-    if (imageName.startsWith('http://') || imageName.startsWith('https://')) {
-      return imageName;
+    const raw = String(imageName || '').trim();
+    if (!raw || raw === 'undefined' || raw === 'null') {
+      return '';
     }
 
-    const baseURL = `${API_BASE_URL}/`;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
+    }
 
-    if (imageName.startsWith('uploads/')) {
-      return `${baseURL}${imageName}`;
-    }
-    
-    // If it's a numeric timestamp style filename (e.g. 1776...), it's in uploads
-    if (/^\d{10,}/.test(imageName)) {
-      return `${baseURL}uploads/${imageName}`;
-    }
-    
-    return `${this.imageBasePath}${imageName}`;
+    const normalized = raw.replace(/\\/g, '/').replace(/^\/+/, '');
+    const withoutUploadsPrefix = normalized.replace(/^uploads\//i, '');
+    const encodedPath = withoutUploadsPrefix
+      .split('/')
+      .filter(Boolean)
+      .map((part) => encodeURIComponent(part))
+      .join('/');
+
+    return `${API_BASE_URL}/uploads/${encodedPath}`;
   }
 
   selectOrder(id: number): void {

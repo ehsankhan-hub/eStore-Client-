@@ -128,7 +128,9 @@ export class CartStoreItem {
       .map((item) => {
         if (item.product.id === cartItem.product.id) {
           if (item.quantity <= 1) return null;
-          const productPrice = this.parsePrice(item.product.price);
+          // Keep quantity decrease aligned with the same effective price used on add.
+          const rawPrice = (item.product as any).offer_price ?? item.product.price;
+          const productPrice = this.parsePrice(rawPrice);
           return {
             ...item,
             quantity: item.quantity - 1,

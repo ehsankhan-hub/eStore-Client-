@@ -91,6 +91,36 @@ import { UserService } from '../../../home/services/user/user.service';
             <p class="text-[10px] text-red-600 mt-2 font-medium italic">* This will place your product in the "Hot Deals" section.</p>
           </div>
 
+          <!-- Variant Options -->
+          <div class="bg-white border border-gray-200 p-4 rounded-md">
+            <h3 class="text-md font-semibold text-gray-800 mb-3">Product Options</h3>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Internal Memory</label>
+              <input type="text" [(ngModel)]="memoryOptionsText" name="memoryOptionsText" placeholder="Example: 256 GB, 512 GB, 1 TB"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500">
+              <p class="text-xs text-gray-500 mt-1">Separate multiple memory options with commas.</p>
+            </div>
+
+            <div class="mt-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-gray-700">Available Colors</label>
+                <button type="button" (click)="addColorOption()"
+                  class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 cursor-pointer">+ Add Color</button>
+              </div>
+
+              <div class="space-y-2">
+                <div *ngFor="let color of colorOptions; let i = index" class="grid grid-cols-[1fr_90px_auto] gap-2 items-center">
+                  <input type="text" [(ngModel)]="color.name" [name]="'colorName' + i" placeholder="Color name"
+                    class="border border-gray-300 rounded-md p-2 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+                  <input type="color" [(ngModel)]="color.hex" [name]="'colorHex' + i"
+                    class="h-10 w-full border border-gray-300 rounded-md bg-white p-1 cursor-pointer">
+                  <button type="button" (click)="removeColorOption(i)"
+                    class="text-red-500 hover:text-red-700 text-xs font-bold cursor-pointer">Remove</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Product Images</label>
             <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md bg-white hover:bg-gray-50 transition-colors">
@@ -141,6 +171,10 @@ export class AddProductComponent {
   // New Offer Fields
   discount_pct: number | null = null;
   expires_at: string = '';
+  memoryOptionsText = '';
+  colorOptions: Array<{ name: string; hex: string }> = [
+    { name: 'Black', hex: '#1f2937' },
+  ];
 
   selectedFiles: File[] = [];
 
@@ -169,12 +203,43 @@ export class AddProductComponent {
     }
   }
 
+  addColorOption() {
+    this.colorOptions.push({ name: '', hex: '#94a3b8' });
+  }
+
+  removeColorOption(index: number) {
+    this.colorOptions.splice(index, 1);
+  }
+
+  private getMemoryOptions(): string[] {
+    return this.memoryOptionsText
+      .split(',')
+      .map((option) => option.trim())
+      .filter(Boolean);
+  }
+
+  private getColorOptions(): Array<{ name: string; hex: string }> {
+    return this.colorOptions
+      .map((color, index) => {
+        const hex = String(color.hex || '').trim() || '#94a3b8';
+        const rawName = String(color.name || '').trim();
+        return {
+          // Keep color even when seller forgets name.
+          name: rawName || `Color ${index + 1}`,
+          hex,
+        };
+      })
+      .filter((color) => color.hex.length > 0);
+  }
+
   onSubmit() {
     const formData = new FormData();
     formData.append('product_name', this.title);
     formData.append('category_id', this.category);
     formData.append('description', this.description || '');
     if (this.price) formData.append('price', String(this.price));
+    formData.append('memory_options', JSON.stringify(this.getMemoryOptions()));
+    formData.append('color_options', JSON.stringify(this.getColorOptions()));
     const user = this.userService.loggedInUserInfo();
     if (user && user.id) {
       formData.append('seller_id', String(user.id));

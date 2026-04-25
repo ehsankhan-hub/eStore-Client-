@@ -16,6 +16,12 @@ import { PaymentService } from '../services/payment/payment.service';
 import { API_BASE_URL } from '../../../api-url';
 import { StripeCardElement, StripeElements } from '@stripe/stripe-js';
 
+declare global {
+  interface Window {
+    Razorpay?: any;
+  }
+}
+
 @Component({
   selector: 'app-cart',
   imports: [
@@ -45,8 +51,6 @@ export class CartComponent {
   faChevronRight = faChevronRight;
   faSpinner = faSpinner;
   
-  private imageBasePath = '/assets/images/'; // Centralize base path
-
   alertType: number = 0; //new
   alertMessage: string = '';
   disableCheckout: boolean = false;
@@ -69,6 +73,7 @@ export class CartComponent {
   selectedCardId = signal<number>(1);
   showAddCardForm = signal<boolean>(false);
   cardProcessing = signal<boolean>(false);
+  selectedPaymentMethod = signal<'stripe' | 'razorpay'>('stripe');
 
   // Stripe Elements
   private elements: StripeElements | undefined;
@@ -231,6 +236,10 @@ export class CartComponent {
     this.selectedCardId.set(id);
   }
 
+  selectPaymentMethod(method: 'stripe' | 'razorpay') {
+    this.selectedPaymentMethod.set(method);
+  }
+
   getProgressWidth(): string {
     const step = this.activeStep();
     if (step === 1) return '0%';
@@ -240,46 +249,62 @@ export class CartComponent {
   }
 
   getImageUrl(imageName: string | undefined): string {
-    const placeholder = 'assets/images/shop-1.jpg';
-    
-    if (!imageName || imageName === 'undefined' || imageName === 'null' || imageName.trim() === '') {
-      return placeholder;
-    }
-    
-    // 1. Full URLs
-    if (imageName.startsWith('http')) {
-      return imageName;
+    const raw = String(imageName || '').trim();
+    if (!raw || raw === 'undefined' || raw === 'null') {
+      return '';
     }
 
-    // 2. Local Assets
-    if (imageName.startsWith('assets/') || imageName.startsWith('shop-')) {
-      return imageName.startsWith('assets/') ? imageName : `assets/images/${imageName}`;
+    if (raw.startsWith('http://') || raw.startsWith('https://')) {
+      return raw;
     }
 
-    // 3. Backend Uploads
-    const apiHost = `${API_BASE_URL}/`;
-    
-    // Remove uploads/ prefix if it already exists to avoid duplication with the apiHost
-    const cleanName = imageName.replace(/^uploads\//, '');
-    return `${apiHost}uploads/${cleanName}`;
+    const normalized = raw.replace(/\\/g, '/').replace(/^\/+/, '');
+    const withoutUploadsPrefix = normalized.replace(/^uploads\//i, '');
+    const encodedPath = withoutUploadsPrefix
+      .split('/')
+      .filter(Boolean)
+      .map((part) => encodeURIComponent(part))
+      .join('/');
+
+    return `${API_BASE_URL}/uploads/${encodedPath}`;
   }
 
   // Get the first image from galleryImages or fallback to product_img
   getMainImage(cartItem: CartItem): string {
     const product = cartItem.product;
     if (product?.galleryImages && Array.isArray(product.galleryImages) && product.galleryImages.length > 0) {
-      return this.getImageUrl(product.galleryImages[0]);
+      const first = product.galleryImages[0] as any;
+      const imageName = typeof first === 'string' ? first : (first?.src || first?.imageFiles || first?.url || first?.path);
+      return this.getImageUrl(imageName);
     }
-    // Fallback to product_img if galleryImages is empty
     return this.getImageUrl(product?.product_img);
+  }
+
+  private parsePrice(value: any): number {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const n = parseFloat(value.replace(/[^0-9.-]/g, ''));
+      return Number.isFinite(n) ? n : 0;
+    }
+    return 0;
+  }
+
+  getOriginalLineTotal(cartItem: CartItem): number {
+    const unitOriginal = this.parsePrice(cartItem?.product?.price);
+    return parseFloat((unitOriginal * (cartItem?.quantity || 0)).toFixed(2));
+  }
+
+  hasDiscountedPrice(cartItem: CartItem): boolean {
+    if (!cartItem?.product) return false;
+    const original = this.parsePrice(cartItem.product.price);
+    const discounted = this.parsePrice((cartItem.product as any).offer_price);
+    return discounted > 0 && discounted < original;
   }
 
   onImageError(event: Event) {
     const imgElement = event.target as HTMLImageElement;
     imgElement.onerror = null;
-    const placeholder = 'assets/images/shop-1.jpg';
-    console.warn('Cart image not found, replaced with placeholder');
-    imgElement.src = placeholder;
+    console.warn('Cart server image failed to load.', { attemptedSrc: imgElement?.src });
   }
 
   private createOrderForm(data: any): FormGroup {
@@ -295,6 +320,10 @@ export class CartComponent {
 
   navigateToHome(): void {
     this.router.navigate(['home/products']);
+  }
+
+  navigateToOrderHistory(): void {
+    this.router.navigate(['/home/pastorders']);
   }
 
   updateQuantity($event: any, cartItem: CartItem): void {
@@ -324,6 +353,11 @@ export class CartComponent {
       return;
     }
 
+    if (this.selectedPaymentMethod() === 'razorpay') {
+      this.startRazorpayCheckout(form);
+      return;
+    }
+
     if (!this.card) {
       this.alertType = 2;
       this.alertMessage = 'Payment module not initialized. Please try again.';
@@ -347,29 +381,7 @@ export class CartComponent {
             console.log('Payment Successful!', paymentIntent);
             
             // 3. Create actual order in DB
-            const deliveryAddress = {
-              userName: form.get('name')?.value,
-              address: form.get('address')?.value,
-              city: form.get('city')?.value,
-              state: form.get('state')?.value,
-              pin: form.get('pin')?.value,
-            };
-
-            const email = this.user()?.email;
-            this.orderStore.createOrder(deliveryAddress, email).subscribe({
-              next: () => {
-                this.cartStore.clearCart();
-                this.cardProcessing.set(false);
-                this.nextStep();
-                setTimeout(() => this.productsStoreItem.loadProducts(), 500);
-              },
-              error: (err) => {
-                this.cardProcessing.set(false);
-                this.disableCheckout = false;
-                this.alertType = 2;
-                this.alertMessage = 'Order created but DB sync failed. Contact support.';
-              }
-            });
+            this.finalizeSuccessfulOrder(form);
           },
           error: (stripeErr) => {
             this.cardProcessing.set(false);
@@ -385,6 +397,142 @@ export class CartComponent {
         this.alertType = 2;
         this.alertMessage = 'Could not contact payment server.';
       }
+    });
+  }
+
+  private async startRazorpayCheckout(form: FormGroup): Promise<void> {
+    if (!this.userService.isAuthenticated() && !this.user()?.email) {
+      this.alertType = 2;
+      this.alertMessage = 'Please log in to place an order.';
+      return;
+    }
+
+    this.cardProcessing.set(true);
+    this.disableCheckout = true;
+
+    const lines = this.cartStore.cart().products.map((item) => ({
+      productId: item.product.id,
+      qty: item.quantity,
+    }));
+
+    try {
+      await this.ensureRazorpayLoaded();
+    } catch {
+      this.cardProcessing.set(false);
+      this.disableCheckout = false;
+      this.alertType = 2;
+      this.alertMessage = 'Could not load Razorpay checkout.';
+      return;
+    }
+
+    this.paymentService.createRazorpayOrder(lines, 'INR').subscribe({
+      next: (res) => {
+        if (!res?.id || !res?.keyId || !res?.amount) {
+          this.cardProcessing.set(false);
+          this.disableCheckout = false;
+          this.alertType = 2;
+          this.alertMessage =
+            res?.message ||
+            'Unable to start Razorpay checkout.';
+          return;
+        }
+
+        const options = {
+          key: res.keyId,
+          amount: res.amount,
+          currency: res.currency || 'INR',
+          name: 'eStore',
+          description: 'Order payment',
+          order_id: res.id,
+          prefill: {
+            name: form.get('name')?.value || '',
+            email: this.user()?.email || '',
+          },
+          theme: { color: '#2563eb' },
+          handler: (response: any) => {
+            this.paymentService.verifyRazorpayPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }).subscribe({
+              next: () => this.finalizeSuccessfulOrder(form),
+              error: (verifyErr) => {
+                this.cardProcessing.set(false);
+                this.disableCheckout = false;
+                this.alertType = 2;
+                this.alertMessage =
+                  verifyErr?.error?.message || 'Razorpay payment verification failed.';
+              },
+            });
+          },
+          modal: {
+            ondismiss: () => {
+              this.cardProcessing.set(false);
+              this.disableCheckout = false;
+              this.alertType = 2;
+              this.alertMessage = 'Payment was cancelled.';
+            },
+          },
+        };
+
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      },
+      error: (err) => {
+        this.cardProcessing.set(false);
+        this.disableCheckout = false;
+        this.alertType = 2;
+        this.alertMessage =
+          err?.error?.message || 'Could not start Razorpay checkout at this time.';
+      },
+    });
+  }
+
+  private finalizeSuccessfulOrder(form: FormGroup): void {
+    const deliveryAddress = {
+      userName: form.get('name')?.value,
+      address: form.get('address')?.value,
+      city: form.get('city')?.value,
+      state: form.get('state')?.value,
+      pin: form.get('pin')?.value,
+    };
+
+    const email = this.user()?.email;
+    this.orderStore.createOrder(deliveryAddress, email).subscribe({
+      next: () => {
+        this.cartStore.clearCart();
+        this.cardProcessing.set(false);
+        this.nextStep();
+        setTimeout(() => this.productsStoreItem.loadProducts(), 500);
+      },
+      error: () => {
+        this.cardProcessing.set(false);
+        this.disableCheckout = false;
+        this.alertType = 2;
+        this.alertMessage = 'Order created but DB sync failed. Contact support.';
+      },
+    });
+  }
+
+  private ensureRazorpayLoaded(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
+      const existing = document.querySelector('script[data-razorpay="checkout"]') as HTMLScriptElement | null;
+      if (existing) {
+        existing.addEventListener('load', () => resolve(), { once: true });
+        existing.addEventListener('error', () => reject(), { once: true });
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.setAttribute('data-razorpay', 'checkout');
+      script.onload = () => resolve();
+      script.onerror = () => reject();
+      document.body.appendChild(script);
     });
   }
 }

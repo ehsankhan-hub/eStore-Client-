@@ -148,6 +148,35 @@ import { UserService } from '../../../home/services/user/user.service';
                     <input type="number" [(ngModel)]="editingProduct.stock_quantity" name="stock_quantity"
                       class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
                   </div>
+
+                  <div class="bg-white border border-gray-200 p-4 rounded-xl">
+                    <h5 class="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wider">Product Options</h5>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-700 mb-1">Internal Memory</label>
+                      <input type="text" [(ngModel)]="editingProduct.memoryOptionsText" name="memoryOptionsText"
+                        placeholder="Example: 256 GB, 512 GB"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+
+                    <div class="mt-4">
+                      <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-semibold text-gray-700">Available Colors</label>
+                        <button type="button" (click)="addEditColorOption()"
+                          class="text-xs font-bold text-indigo-600 hover:text-indigo-800 cursor-pointer">+ Add</button>
+                      </div>
+
+                      <div class="space-y-2">
+                        <div *ngFor="let color of editingProduct.colorOptions; let i = index" class="grid grid-cols-[1fr_70px_auto] gap-2 items-center">
+                          <input type="text" [(ngModel)]="color.name" [name]="'editColorName' + i" placeholder="Color"
+                            class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                          <input type="color" [(ngModel)]="color.hex" [name]="'editColorHex' + i"
+                            class="h-9 w-full border border-gray-300 rounded-lg bg-white p-1 cursor-pointer">
+                          <button type="button" (click)="removeEditColorOption(i)"
+                            class="text-red-500 hover:text-red-700 text-[10px] font-bold cursor-pointer">Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Col 3: Media & Growth -->
@@ -317,6 +346,8 @@ export class ProductListComponent implements OnInit {
   onEdit(product: any) {
     this.editingProduct = { ...product }; // Shallow copy
     this.selectedFiles = []; // Reset file selection
+    this.editingProduct.memoryOptionsText = this.parseMemoryOptions(product.memory_options).join(', ');
+    this.editingProduct.colorOptions = this.parseColorOptions(product.color_options);
     
     // Format date for <input type="date"> (YYYY-MM-DD)
     if (this.editingProduct.expires_at) {
@@ -344,6 +375,102 @@ export class ProductListComponent implements OnInit {
     }
   }
 
+  addEditColorOption() {
+    if (!Array.isArray(this.editingProduct.colorOptions)) {
+      this.editingProduct.colorOptions = [];
+    }
+    this.editingProduct.colorOptions.push({ name: '', hex: '#94a3b8' });
+  }
+
+  removeEditColorOption(index: number) {
+    this.editingProduct.colorOptions.splice(index, 1);
+  }
+
+  private getEditMemoryOptions(): string[] {
+    return String(this.editingProduct.memoryOptionsText || '')
+      .split(',')
+      .map((option) => option.trim())
+      .filter(Boolean);
+  }
+
+  private getEditColorOptions(): Array<{ name: string; hex: string }> {
+    return (this.editingProduct.colorOptions || [])
+      .map((color: any, index: number) => {
+        const hex = String(color?.hex || '').trim() || '#94a3b8';
+        const rawName = String(color?.name || '').trim();
+        return {
+          name: rawName || `Color ${index + 1}`,
+          hex,
+        };
+      })
+      .filter((color: any) => color.hex.length > 0);
+  }
+
+  private parseMemoryOptions(value: unknown): string[] {
+    const parsed = this.parseJsonArray(value);
+    if (parsed.length === 0 && typeof value === 'string' && value.includes(',')) {
+      return value.split(',').map((option) => option.trim()).filter(Boolean);
+    }
+    return parsed.map((option) => String(option || '').trim()).filter(Boolean);
+  }
+
+  private parseColorOptions(value: unknown): Array<{ name: string; hex: string }> {
+    const parsed = this.parseJsonArray(value);
+    return parsed
+      .map((color: any, index: number) => {
+        if (typeof color === 'string') {
+          const text = color.trim();
+          if (/^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(text)) {
+            return { name: `Color ${index + 1}`, hex: text };
+          }
+          const parts = text.split(':').map((p) => p.trim());
+          if (parts.length === 2 && /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(parts[1])) {
+            return { name: parts[0] || `Color ${index + 1}`, hex: parts[1] };
+          }
+          return { name: text || `Color ${index + 1}`, hex: '#94a3b8' };
+        }
+
+        const hex = String(color?.hex || color?.code || '').trim() || '#94a3b8';
+        const rawName = String(color?.name || color?.label || '').trim();
+        return {
+          name: rawName || `Color ${index + 1}`,
+          hex,
+        };
+      })
+      .filter((color) => /^#([0-9A-F]{3}|[0-9A-F]{6})$/i.test(color.hex));
+  }
+
+  private parseJsonArray(value: unknown): any[] {
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (value && typeof value === 'object') {
+      const maybeBuffer = value as { type?: string; data?: number[] };
+      if (maybeBuffer.type === 'Buffer' && Array.isArray(maybeBuffer.data)) {
+        try {
+          const decoded = new TextDecoder().decode(new Uint8Array(maybeBuffer.data));
+          const parsedBuffer = JSON.parse(decoded);
+          return Array.isArray(parsedBuffer) ? parsedBuffer : [];
+        } catch (error) {
+          return [];
+        }
+      }
+      return [];
+    }
+
+    if (typeof value !== 'string') {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
   saveEdit(event: Event) {
     event.preventDefault();
     this.saving = true;
@@ -354,6 +481,8 @@ export class ProductListComponent implements OnInit {
     formData.append('description', this.editingProduct.description || '');
     formData.append('price', String(this.editingProduct.price || 0));
     formData.append('stock_quantity', String(this.editingProduct.stock_quantity || 0));
+    formData.append('memory_options', JSON.stringify(this.getEditMemoryOptions()));
+    formData.append('color_options', JSON.stringify(this.getEditColorOptions()));
     
     // Offer data
     if (this.editingProduct.discount_pct) {

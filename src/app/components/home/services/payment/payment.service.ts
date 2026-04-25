@@ -17,6 +17,19 @@ export interface SyncPayoutVerificationResponse {
   payoutsEnabled?: boolean;
 }
 
+export interface RazorpayOrderResponse {
+  id?: string;
+  amount?: number;
+  currency?: string;
+  keyId?: string;
+  receipt?: string;
+  serverTotal?: number;
+  subtotal?: number;
+  shipping?: number;
+  error?: string;
+  message?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -107,5 +120,24 @@ export class PaymentService {
         return result.paymentIntent;
       })
     );
+  }
+
+  createRazorpayOrder(
+    lines: { productId: number; qty: number }[],
+    currency: string = 'INR'
+  ): Observable<RazorpayOrderResponse> {
+    const url = `${API_BASE_URL}/payments/razorpay/create-order`;
+    const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
+    return this.http.post<RazorpayOrderResponse>(url, { lines, currency }, { headers });
+  }
+
+  verifyRazorpayPayment(payload: {
+    razorpay_order_id: string;
+    razorpay_payment_id: string;
+    razorpay_signature: string;
+  }): Observable<{ verified: boolean }> {
+    const url = `${API_BASE_URL}/payments/razorpay/verify`;
+    const headers = new HttpHeaders().set('Authorization', this.userService.authToken() || '');
+    return this.http.post<{ verified: boolean }>(url, payload, { headers });
   }
 }

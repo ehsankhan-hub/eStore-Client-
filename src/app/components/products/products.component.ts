@@ -31,8 +31,6 @@ export class ProductsComponent {
   faTimesCircle = faTimesCircle;
 
   productsSignal = signal<Product[]>([]);
-  private imageBasePath = '/assets/images/'; // Centralize base path
-
   // Mock states for UI features
   wishlistStr = new Set<number>();
   compareList = new Set<number>();
@@ -45,39 +43,34 @@ export class ProductsComponent {
   ngOnInit(): void { }
 
   getImageUrl(imageName: any | undefined): string {
-    // 0. Handle Invalid/Null names
-    if (!imageName || imageName === 'undefined' || imageName === 'null') {
-      return 'assets/images/cat-fashion.jpg'; // Verified local asset
+    const rawInput = String(imageName || '').trim();
+    if (!rawInput || rawInput === 'undefined' || rawInput === 'null') {
+      return '';
     }
 
-    // 1. Absolute URLs (external images)
-    if (imageName.startsWith('http')) {
-      return imageName;
+    if (rawInput.startsWith('http://') || rawInput.startsWith('https://')) {
+      return rawInput;
     }
 
-    // 2. Local Assets Check (Legacy or Default assets)
-    const isLocalAsset = imageName.startsWith('shop-') || 
-                        imageName.startsWith('cat-') || 
-                        imageName.startsWith('hero-') || 
-                        imageName.startsWith('assets/');
+    const raw = rawInput.replace(/\\/g, '/').replace(/^\/+/, '');
+    const withoutUploadsPrefix = raw.replace(/^uploads\//i, '');
+    const encodedPath = withoutUploadsPrefix
+      .split('/')
+      .filter(Boolean)
+      .map((part) => encodeURIComponent(part))
+      .join('/');
 
-    if (isLocalAsset) {
-      return imageName.startsWith('assets/') ? imageName : `${this.imageBasePath}${imageName}`;
-    }
-
-    // 3. Seller Uploads (PRIORITY)
-    // If it's not a known local asset, it must be a seller upload from the server
-    return `${API_BASE_URL}/uploads/${imageName}`;
+    return `${API_BASE_URL}/uploads/${encodedPath}`;
   }
 
   getCurrentImage(product: Product): string {
     const idx = product.currentImageIndex || 0;
     if (product.galleryImages && product.galleryImages[idx]) {
       const img = product.galleryImages[idx];
-      const imageName = typeof img === 'string' ? img : img.src;
+      const imageName = typeof img === 'string' ? img : (img?.src || img?.imageFiles || img?.url || img?.path);
       return this.getImageUrl(imageName);
     }
-    return this.getImageUrl(null);
+    return this.getImageUrl((product as any)?.product_img);
   }
 
   changeProductImage(product: Product, newIndex: number): void {
@@ -94,10 +87,11 @@ export class ProductsComponent {
     // Prevent infinite loop by disabling further error handling on this element
     imgElement.onerror = null; 
     
-    console.warn('Image failed to load. Attempting fallback to static assets.');
-    
-    // Fallback order: Try local fashion category image, then a generic placeholder
-    imgElement.src = 'assets/images/cat-fashion.jpg';
+    console.warn('Server image failed to load.', {
+      productId: product?.id,
+      imageIndex,
+      attemptedSrc: imgElement?.src
+    });
   }
 
   trackByProductId(index: number, product: Product): number {
@@ -168,6 +162,24 @@ export class ProductsComponent {
 
   getReviewCount(product: Product): number {
     return (product as any).reviewCount || 24; // Mock value
+  }
+
+  isLastDayOffer(product: Product): boolean {
+    if (!product?.expires_at || !(product.discount_pct && product.discount_pct > 0)) {
+      return false;
+    }
+
+    const expiry = new Date(product.expires_at);
+    if (Number.isNaN(expiry.getTime())) {
+      return false;
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const expiryDay = new Date(expiry.getFullYear(), expiry.getMonth(), expiry.getDate());
+    const dayDiff = Math.round((expiryDay.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+    // Treat both "today" and "tomorrow" as final urgency window.
+    return dayDiff >= 0 && dayDiff <= 1;
   }
 
   isInStock(product: Product): boolean {
